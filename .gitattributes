@@ -1,0 +1,2 @@
+model/clothes.glb filter=lfs diff=lfs merge=lfs -text
+model/shose.glb filter=lfs diff=lfs merge=lfs -text
