@@ -954,10 +954,13 @@
 
   <script>
     window.addEventListener('error', function (e) {
-      document.getElementById('loading').innerHTML =
-        '<div id="js-uncaught-error" style="color:#ef4444; font-family:monospace; font-size:16px; text-align:left; max-width:600px; margin:20px auto; padding:20px; background:#18181b; border:2px solid #ef4444; border-radius:8px; z-index:999999; position:relative;">' +
-        '<strong>JS Error caught:</strong><br>' + e.message + '<br>at line ' + e.lineno + ' in ' + e.filename +
-        '</div>';
+      const el = document.getElementById('preloader') || document.body;
+      if (el) {
+        el.innerHTML =
+          '<div id="js-uncaught-error" style="color:#ef4444; font-family:monospace; font-size:16px; text-align:left; max-width:600px; margin:20px auto; padding:20px; background:#18181b; border:2px solid #ef4444; border-radius:8px; z-index:999999; position:relative;">' +
+          '<strong>JS Error caught:</strong><br>' + e.message + '<br>at line ' + e.lineno + ' in ' + e.filename +
+          '</div>';
+      }
     });
   </script>
 
@@ -1113,9 +1116,8 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
     controls.target.set(0, 2, 0);
-    
+
     // Set dynamic boundaries based on initial aspect ratio to prevent snapping
-    const initialAspect = window.innerWidth / window.innerHeight;
     controls.minDistance = initialAspect < 1.6 ? 4.5 : 3.0;
     controls.maxDistance = initialAspect < 1.6 ? 9.6 : 6.5;
 
@@ -1135,7 +1137,7 @@
       // Responsive FOV logic that ensures side walls fit on mobile devices (portrait mode)
       if (aspect < 1.0) {
         // Mobile portrait: increase FOV so side walls are not severely cropped
-        camera.fov = 85; 
+        camera.fov = 85;
       } else if (aspect < 1.6) {
         // Tablet / square screens
         camera.fov = 72;
@@ -1147,7 +1149,7 @@
       // Sync OrbitControls distance constraints with viewport aspect ratio
       if (aspect < 1.6) {
         // Matches mobile camera target distance (~9.53) to allow proper framing without snapping
-        controls.maxDistance = 9.6; 
+        controls.maxDistance = 9.6;
         controls.minDistance = 4.5;
         controls.autoRotate = false;
       } else {
@@ -1348,7 +1350,7 @@
 
     function toggleRoomLights() {
       roomLightsOn = !roomLightsOn;
-      
+
       // Animate physical rocker switch tilt (around local z-axis since it lies on the right wall facing -X)
       if (toggleButton) {
         gsap.to(toggleButton.rotation, {
@@ -3871,7 +3873,8 @@
     switchPlate.position.set(9.78, 4.5, -6.5);
     switchGroup.add(switchPlate);
 
-    // 2. Chrome inner border backing plate - highly reflective metallic silver
+    // 2. 
+    // Chrome inner border backing plate - highly reflective metallic silver
     const chromeBorder = new THREE.Mesh(
       new THREE.BoxGeometry(0.11, 0.37, 0.37),
       new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.05, metalness: 1.0 })
