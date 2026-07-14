@@ -690,7 +690,8 @@
     .marquee-strip {
       width: 1300px;
       height: 60px;
-      background: transparent;
+      background: #0b0a0e;
+      /* solid obsidian */
       color: #dfb86c;
       /* Warm gold text */
       font-family: 'Space Grotesk', 'Montserrat', 'Helvetica Neue', sans-serif;
@@ -1125,8 +1126,8 @@
       // For desktop (aspect >= 1.6), we use fov = 55.
       // For mobile/tablet (aspect < 1.6), we widen the fov so the whole room fits.
       if (aspect < 1.6) {
-        // simple interpolation: as aspect goes from 1.6 down to 1.5, fov goes from 55 up to 76.
-        const clampedAspect = Math.max(aspect, 1.5);
+        // simple interpolation: as aspect goes from 1.6 down to 1.0, fov goes from 55 up to 76.
+        const clampedAspect = Math.max(aspect, 1.0);
         const targetFov = 55 + (1.6 - clampedAspect) * 35;
         camera.fov = Math.min(targetFov, 76); 
       } else {
@@ -1135,10 +1136,9 @@
 
       // Also adjust OrbitControls distance limit and disable autoRotate on mobile/tablet to avoid jitter/lag
       if (aspect < 1.6) {
-        controls.enableZoom = false; // Disable zoom completely on mobile/tablet to prevent zoom out
+        controls.maxDistance = 6.5; // Limit zoom out to 6.5 max
         controls.autoRotate = false;
       } else {
-        controls.enableZoom = true;
         controls.maxDistance = 6.5;
         controls.autoRotate = false;
       }
@@ -1385,10 +1385,10 @@
       border.position.set(x, 3.5, z);
       scene.add(border);
     }
-    addCornerBorder(-10, -8);
-    addCornerBorder(10, -8);
-    addCornerBorder(10, 8);
-    addCornerBorder(-10, 8);
+    // addCornerBorder(-10, -8);
+    // addCornerBorder(10, -8);
+    // addCornerBorder(10, 8);
+    // addCornerBorder(-10, 8);
 
     // ---------- text texture helpers ----------
     function makeTextTexture(text, { width = 1024, height = 256, font = 'bold 110px Arial', color = '#f5f3fa', glow = '#8b5cf6', align = 'center' } = {}) {
