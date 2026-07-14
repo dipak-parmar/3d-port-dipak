@@ -3498,15 +3498,6 @@
     }
     addPhotoGridOnLeftWall(0, PROJECT_PHOTOS, PROJECT_LABELS);
 
-    // First row (Project 1,2,3) ke niche
-    addMarqueeCSS(
-      cssScene,
-      'PROJECT · PROJECT · PROJECT',
-      new THREE.Vector3(-9.55, 3.2, 0), // Pushed forward to -9.55
-      Math.PI / 2,
-      'left'
-    );
-
     // ---------- White Minimalist Wardrobe Cabinet for Clothes under Projects ----------
     const wardrobeGroup = new THREE.Group();
     // Centering the wardrobe group at Z = 3.2 shifts the cabinet further rightwards along Wall 1
@@ -3814,24 +3805,6 @@
       });
     }
     addSkillGridOnFrontWall(0, SKILLS);
-
-    // First row (React, Node, Python) ke niche
-    addMarqueeCSS(
-      cssScene,
-      'SKILL · SKILL · SKILL',
-      new THREE.Vector3(0, 3.2, 7.6), // Pushed forward to 7.6
-      Math.PI,
-      'right'
-    );
-
-    // Second row (Figma, Three.js, SQL) ke niche
-    addMarqueeCSS(
-      cssScene,
-      'SKILL · SKILL · SKILL',
-      new THREE.Vector3(0, -0.80, 7.6), // Pushed forward to 7.6
-      Math.PI,
-      'left'
-    );
     // =========================================================
     // WALL 3 (right, x=+10) — center empty; left = resume neon; right = social icons (brighter wall)
     // =========================================================
