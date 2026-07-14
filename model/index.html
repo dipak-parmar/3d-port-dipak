@@ -40,6 +40,11 @@
       overflow: hidden;
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform, box-shadow;
+      /* Safari 3D transform preserve and view controls */
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: visible;
+      backface-visibility: visible;
     }
 
     /* Project Card Specific Styling */
@@ -435,16 +440,22 @@
     body {
       margin: 0;
       padding: 0;
-      height: 100%;
+      height: 100vh;
+      height: 100dvh; /* dvh for iOS Safari address bar layout dynamic resizing */
       background: #0a0910;
       overflow: hidden;
       font-family: Arial, sans-serif;
+      /* Prevent Safari rubber banding on elastic scrolling */
+      position: fixed;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
     }
 
     #container {
       position: relative;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
     }
 
     canvas {
@@ -455,8 +466,25 @@
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       z-index: 2;
+      /* Enforce Safari 3D transform layers context setup */
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: visible;
+      backface-visibility: visible;
+    }
+
+    /* Force all child objects of CSS3D layer to preserve 3D scaling and orientation properly on iOS mobile Safari */
+    #css-layer > div {
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: visible;
+      backface-visibility: visible;
+      width: 100%;
+      height: 100%;
     }
 
     .hint {
@@ -707,6 +735,11 @@
       border-bottom: 1px solid rgba(223, 184, 108, 0.25);
       backdrop-filter: blur(10px);
       overflow: hidden;
+      /* WebKit Safari 3D properties */
+      -webkit-transform-style: preserve-3d;
+      transform-style: preserve-3d;
+      -webkit-backface-visibility: visible;
+      backface-visibility: visible;
     }
 
     .marquee-strip marquee {
@@ -1063,7 +1096,7 @@
     modelCanvas.style.top = '0';
     modelCanvas.style.left = '0';
     modelCanvas.style.width = '100vw';
-    modelCanvas.style.height = '100vh';
+    modelCanvas.style.height = '100dvh';
     modelCanvas.style.zIndex = '3';
     modelCanvas.style.pointerEvents = 'none';
     container.appendChild(modelCanvas);
@@ -1117,9 +1150,9 @@
     controls.dampingFactor = 0.07;
     controls.target.set(0, 2, 0);
 
-    // Set dynamic boundaries based on initial aspect ratio to prevent snapping
+    // Set dynamic boundaries based on initial aspect ratio to prevent snapping or clipping outside walls
     controls.minDistance = initialAspect < 1.6 ? 4.5 : 3.0;
-    controls.maxDistance = initialAspect < 1.6 ? 9.6 : 6.5;
+    controls.maxDistance = initialAspect < 1.6 ? 7.4 : 6.5;
 
     // Allow up-down rotation limits for vertical exploration
     controls.minPolarAngle = Math.PI / 2 - 0.35;
@@ -1148,8 +1181,8 @@
 
       // Sync OrbitControls distance constraints with viewport aspect ratio
       if (aspect < 1.6) {
-        // Matches mobile camera target distance (~9.53) to allow proper framing without snapping
-        controls.maxDistance = 9.6;
+        // Restricting mobile camera to 7.4 units max distance keeps the camera strictly inside the 8.0 unit room box boundaries, preventing mirrored text!
+        controls.maxDistance = 7.4;
         controls.minDistance = 4.5;
         controls.autoRotate = false;
       } else {
@@ -3322,7 +3355,7 @@
     // =========================================================
     // Shifting text slightly to the left side (x = -1.5) and adjusted heights to look balanced without the Name text
     const aboutHeadingTex = makeTextTexture('ABOUT US', { width: 1000, height: 220, font: 'bold 100px Arial' });
-    const aboutHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: aboutHeadingTex, transparent: true, depthWrite: false }));
+    const aboutHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: aboutHeadingTex, transparent: true, depthWrite: true }));
     aboutHeading.position.set(-1.5, 5.8, -7.5); // Position adjusted from 6.4 to 5.8
     scene.add(aboutHeading);
 
@@ -3374,14 +3407,14 @@
     });
 
     const modelNameTex = makeTextTexture(NAME_TEXT, { width: 1200, height: 300, font: 'bold 150px Arial', glow: '#8b5cf6' });
-    modelNamePlane = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshBasicMaterial({ map: modelNameTex, transparent: true, depthWrite: false }));
+    modelNamePlane = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshBasicMaterial({ map: modelNameTex, transparent: true, depthWrite: true }));
     modelNamePlane.rotation.y = -Math.PI / 2; // Flat on the wall, facing inwards
     modelNamePlane.position.set(9.78, 7.3, 3.5); // Stuck flat to Right Wall 3, aligned with other headings (7.3)
     scene.add(modelNamePlane);
     allFloaters.push({ group: [modelNamePlane], baseY: 7.3, phase: Math.random() * Math.PI * 2 });
 
     const paraTex = makeParagraphTexture(ABOUT_PARAGRAPH, { width: 1200, height: 560 });
-    const paraPlane = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 2.7), new THREE.MeshBasicMaterial({ map: paraTex, transparent: true, depthWrite: false }));
+    const paraPlane = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 2.7), new THREE.MeshBasicMaterial({ map: paraTex, transparent: true, depthWrite: true }));
     paraPlane.position.set(-1.5, 3.3, -7.5); // Position adjusted from 2.8 to 3.3
     scene.add(paraPlane);
     addAboutImages();
@@ -3390,7 +3423,7 @@
     // WALL 1 (left, x=-10) — PROJECTS (now fills the whole wall)
     // =========================================================
     const projHeadingTex = makeTextTexture('PROJECTS', { width: 1000, height: 220, font: 'bold 100px Arial' });
-    const projHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: projHeadingTex, transparent: true, depthWrite: false }));
+    const projHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: projHeadingTex, transparent: true, depthWrite: true }));
     projHeading.rotation.y = Math.PI / 2;
     projHeading.position.set(-9.6, 7.3, 0); // Pushed forward out of wall to -9.6
     scene.add(projHeading);
@@ -3708,7 +3741,7 @@
     // WALL 2 (front, z=+8) — SKILLS
     // =========================================================
     const skillHeadingTex = makeTextTexture('SKILLS', { width: 1000, height: 220, font: 'bold 100px Arial' });
-    const skillHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: skillHeadingTex, transparent: true, depthWrite: false }));
+    const skillHeading = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.95), new THREE.MeshBasicMaterial({ map: skillHeadingTex, transparent: true, depthWrite: true }));
     skillHeading.rotation.y = Math.PI;
     skillHeading.position.set(0, 7.3, 7.6); // Pushed forward to 7.6
     scene.add(skillHeading);
@@ -4354,9 +4387,9 @@
       gsap.to(".preloader_bg", { opacity: 0, delay: 1.05, duration: 0.6, ease: "power2.out" });
 
       // Smooth camera intro swoop zoom-in transition (unchanged)
-      const finalX = (window.innerWidth / window.innerHeight < 1.6) ? -5.6 : -3.5;
+      const finalX = (window.innerWidth / window.innerHeight < 1.6) ? -4.2 : -3.5;
       const finalY = (window.innerWidth / window.innerHeight < 1.6) ? 2.3 : 2.2;
-      const finalZ = (window.innerWidth / window.innerHeight < 1.6) ? 7.7 : 4.8;
+      const finalZ = (window.innerWidth / window.innerHeight < 1.6) ? 5.8 : 4.8;
       gsap.to(camera.position, {
         x: finalX,
         y: finalY,
@@ -4597,7 +4630,7 @@
 
   <!-- PDF Viewer Overlay Modal -->
   <div id="pdf-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
     <div
       style="position: relative; width: 90%; height: 90%; max-width: 960px; background: #141219; border: 3px solid #8b5cf6; border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(139, 92, 246, 0.4);">
       <button id="close-pdf-btn"
@@ -4610,7 +4643,7 @@
 
   <!-- Certificate Image Viewer Overlay Modal with Blue Theme -->
   <div id="image-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
     <div
       style="position: relative; width: 90%; height: 90%; max-width: 960px; background: #141219; border: 3px solid #0011ff; border-radius: 20px; overflow: hidden; box-shadow: 0 0 50px rgba(0, 17, 255, 0.4); display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
       <button id="close-image-btn"
@@ -4623,7 +4656,7 @@
 
   <!-- Skill Details Overlay Modal with Custom Theme matching selected skill -->
   <div id="skill-modal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(5, 4, 8, 0.85); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
     <div id="skill-modal-content"
       style="position: relative; width: 90%; max-width: 550px; background: #141219; border: 3px solid #dfb86c; border-radius: 20px; box-shadow: 0 0 50px rgba(223, 184, 108, 0.4); display: flex; flex-direction: column; align-items: center; padding: 40px 30px; box-sizing: border-box; color: #f5f3fa; text-align: center; font-family: 'Space Grotesk', sans-serif; transition: all 0.3s ease;">
 
@@ -4693,6 +4726,18 @@
       #nav-btn-right {
         width: 44px !important;
         height: 44px !important;
+        top: 80% !important; /* Low enough to avoid intersection with central 3D meshes */
+        transform: translateY(-50%) !important;
+      }
+
+      #nav-btn-left:hover,
+      #nav-btn-right:hover {
+        transform: translateY(-50%) scale(1.1) !important;
+      }
+
+      #nav-btn-left:active,
+      #nav-btn-right:active {
+        transform: translateY(-50%) scale(0.95) !important;
       }
 
       #nav-btn-left {
