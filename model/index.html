@@ -1334,12 +1334,17 @@
       metalness: 0.05
     });
 
+    const borderLightMaterial = new THREE.MeshBasicMaterial({
+      color: 0x000000, // Starts off (black/unlit)
+      toneMapped: false
+    });
+
     function toggleRoomLights() {
       roomLightsOn = !roomLightsOn;
       if (roomLightsOn) {
         if (toggleButton) toggleButton.material.color.setHex(0x33ff33); // green
-        if (wallNeonGroup) wallNeonGroup.visible = true;
         wallMaterial.color.setHex(0xffffff); // beautiful clean white when ON
+        borderLightMaterial.color.setHex(0xffffff); // Glow White when ON (under and upper border stripes light up!)
 
         // Set red/blue lights to very subtle intensities (minor-minor) when switch is ON
         if (leftRedLight) leftRedLight.intensity = 8.0;
@@ -1348,8 +1353,8 @@
         if (mRightBlueLight) mRightBlueLight.intensity = 10.0;
       } else {
         if (toggleButton) toggleButton.material.color.setHex(0xff3333); // red
-        if (wallNeonGroup) wallNeonGroup.visible = false;
         wallMaterial.color.setHex(0x1f1f24); // default deep charcoal/dark gray
+        borderLightMaterial.color.setHex(0x000000); // Turns OFF (black) when switch is OFF
 
         // Revert to original atmospheric intensities when switch is OFF
         if (leftRedLight) leftRedLight.intensity = 24.0;
@@ -1388,32 +1393,26 @@
       );
       group.add(wall);
 
-      // Minimalist white glowing borders
-      const lightMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        toneMapped: false
-      });
-
       const stripThickness = 0.045; // sleek, minimalist width
       const depthOffset = 0.01;      // protruding slightly forward to avoid Z-fighting
 
       // Top light strip
-      const topLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), lightMaterial);
+      const topLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), borderLightMaterial);
       topLight.position.set(0, height / 2 - stripThickness / 2, depthOffset);
       group.add(topLight);
 
       // Bottom light strip
-      const bottomLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), lightMaterial);
+      const bottomLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), borderLightMaterial);
       bottomLight.position.set(0, -height / 2 + stripThickness / 2, depthOffset);
       group.add(bottomLight);
 
       // Left light strip
-      const leftLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), lightMaterial);
+      const leftLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), borderLightMaterial);
       leftLight.position.set(-width / 2 + stripThickness / 2, 0, depthOffset);
       group.add(leftLight);
 
       // Right light strip
-      const rightLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), lightMaterial);
+      const rightLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), borderLightMaterial);
       rightLight.position.set(width / 2 - stripThickness / 2, 0, depthOffset);
       group.add(rightLight);
 
@@ -3281,7 +3280,7 @@
     codingSetup.add(deskLamp);
 
     scene.add(codingSetup);
-    addWallNeonStrips();
+    // addWallNeonStrips();
 
     // =========================================================
     // WALL 4 (back, z=-8) — left bare (logo/video/marquees removed)
