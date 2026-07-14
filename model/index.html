@@ -3911,13 +3911,28 @@
     switchGroup.add(toggleButton);
     interactiveObjects.push(toggleButton);
 
-    // 4. Subtle Label Text ("ROOM LIGHTS") placed neatly below the switch
-    const labelTex = makeTextTexture("ROOM LIGHTS", {
-      width: 256,
-      height: 64,
-      font: "bold 15px Montserrat, Arial, sans-serif",
-      color: "#8b949e", // muted cool gray
-      glow: "rgba(255, 255, 255, 0.05)",
+    // Large transparent hit box to make tapping the switch on mobile extremely easy
+    const switchHitBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.9, 0.9),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.0, depthWrite: false })
+    );
+    switchHitBox.position.set(9.73, 4.5, -6.5);
+    switchHitBox.userData = {
+      baseScale: 1.0,
+      onClick: () => {
+        toggleRoomLights();
+      }
+    };
+    switchGroup.add(switchHitBox);
+    interactiveObjects.push(switchHitBox);
+
+    // 4. Large Label Text ("FOR LIGHT") placed neatly below the switch
+    const labelTex = makeTextTexture("FOR LIGHT", {
+      width: 512,
+      height: 128,
+      font: "bold 38px Montserrat, Arial, sans-serif",
+      color: "#ffffff", // bright white for high legibility
+      glow: "rgba(255, 255, 255, 0.35)",
       align: "center"
     });
     const labelMat = new THREE.MeshBasicMaterial({
@@ -3925,9 +3940,9 @@
       transparent: true,
       side: THREE.DoubleSide
     });
-    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.175), labelMat);
+    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.25), labelMat);
     labelMesh.rotation.y = -Math.PI / 2;
-    labelMesh.position.set(9.77, 4.12, -6.5);
+    labelMesh.position.set(9.77, 4.05, -6.5);
     switchGroup.add(labelMesh);
 
     scene.add(switchGroup);
@@ -4282,17 +4297,34 @@
       }
     });
 
-    window.addEventListener('click', (event) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    let pointerDownX = 0;
+    let pointerDownY = 0;
+    let pointerDownTime = 0;
 
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(interactiveObjects);
+    window.addEventListener('pointerdown', (event) => {
+      pointerDownX = event.clientX;
+      pointerDownY = event.clientY;
+      pointerDownTime = performance.now();
+    });
 
-      if (intersects.length > 0) {
-        const obj = intersects[0].object;
-        if (obj.userData.onClick) {
-          obj.userData.onClick();
+    window.addEventListener('pointerup', (event) => {
+      const diffX = Math.abs(event.clientX - pointerDownX);
+      const diffY = Math.abs(event.clientY - pointerDownY);
+      const duration = performance.now() - pointerDownTime;
+
+      // Only trigger if it is a short tap (duration < 250ms) and the pointer has moved less than 6 pixels (distinguishes tap from drag/orbit!)
+      if (diffX < 6 && diffY < 6 && duration < 250) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(interactiveObjects);
+
+        if (intersects.length > 0) {
+          const obj = intersects[0].object;
+          if (obj.userData.onClick) {
+            obj.userData.onClick();
+          }
         }
       }
     });
@@ -4536,11 +4568,11 @@
       let distanceMultiplier = 1.0;
 
       if (aspect < 1.0) {
-        // Mobile portrait: zoom in closer to make text highly legible and clear!
-        distanceMultiplier = 1.15;
+        // Mobile portrait: zoom in closer to make text highly legible and clear! That is 95% of target distance
+        distanceMultiplier = 0.95;
       } else if (aspect < 1.6) {
         // Tablet mode: zoom in closer
-        distanceMultiplier = 1.05;
+        distanceMultiplier = 1.0;
       }
 
       gsap.to(camera.position, {
