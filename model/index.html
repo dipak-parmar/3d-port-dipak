@@ -1126,17 +1126,17 @@
       // For desktop (aspect >= 1.6), we use fov = 55.
       // For mobile/tablet (aspect < 1.6), we widen the fov so the whole room fits.
       if (aspect < 1.6) {
-        // simple interpolation: as aspect goes from 1.6 down to 0.5, fov goes from 55 up to 92.
-        // Formula: fov = 55 + (1.6 - aspect) * 35;
-        const targetFov = 55 + (1.6 - aspect) * 35;
-        camera.fov = Math.min(targetFov, 92); // cap at 92 to avoid fish-eye distortion
+        // simple interpolation: as aspect goes from 1.6 down to 1.0, fov goes from 55 up to 76.
+        const clampedAspect = Math.max(aspect, 1.0);
+        const targetFov = 55 + (1.6 - clampedAspect) * 35;
+        camera.fov = Math.min(targetFov, 76); 
       } else {
         camera.fov = 55;
       }
 
       // Also adjust OrbitControls distance limit and disable autoRotate on mobile/tablet to avoid jitter/lag
       if (aspect < 1.6) {
-        controls.maxDistance = 11.5;
+        controls.maxDistance = 6.5; // Limit zoom out to 6.5 max
         controls.autoRotate = false;
       } else {
         controls.maxDistance = 6.5;
