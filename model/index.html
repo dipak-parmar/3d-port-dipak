@@ -3865,6 +3865,14 @@
     // Positioned below certificates, left side (Z = -6.5, Y = 4.5, X = 9.76)
     const switchGroup = new THREE.Group();
 
+    // 0. Minimalist Glowing White Border underlight (thin surround behind plate)
+    const switchGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.09, 0.47, 0.47), // slightly larger than the 0.45 plate
+      new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })
+    );
+    switchGlow.position.set(9.785, 4.5, -6.5);
+    switchGroup.add(switchGlow);
+
     // 1. Outer Backplate - Matte Black (clean plastic vibe)
     const switchPlate = new THREE.Mesh(
       new THREE.BoxGeometry(0.1, 0.45, 0.45),
@@ -3873,11 +3881,10 @@
     switchPlate.position.set(9.78, 4.5, -6.5);
     switchGroup.add(switchPlate);
 
-    // 2. 
-    // Chrome inner border backing plate - highly reflective metallic silver
+    // 2. Chrome inner border backing plate - highly reflective shinny silver chrome
     const chromeBorder = new THREE.Mesh(
       new THREE.BoxGeometry(0.11, 0.37, 0.37),
-      new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.05, metalness: 1.0 })
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.0, metalness: 1.0 })
     );
     chromeBorder.position.set(9.77, 4.5, -6.5);
     switchGroup.add(chromeBorder);
@@ -3897,6 +3904,25 @@
     };
     switchGroup.add(toggleButton);
     interactiveObjects.push(toggleButton);
+
+    // 4. Subtle Label Text ("ROOM LIGHTS") placed neatly below the switch
+    const labelTex = makeTextTexture("ROOM LIGHTS", {
+      width: 512,
+      height: 128,
+      font: "bold 44px Montserrat, Arial, sans-serif",
+      color: "#8b949e", // muted cool gray
+      glow: "rgba(255, 255, 255, 0.15)",
+      align: "center"
+    });
+    const labelMat = new THREE.MeshBasicMaterial({
+      map: labelTex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.175), labelMat);
+    labelMesh.rotation.y = -Math.PI / 2;
+    labelMesh.position.set(9.77, 4.12, -6.5);
+    switchGroup.add(labelMesh);
 
     scene.add(switchGroup);
 
