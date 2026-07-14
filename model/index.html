@@ -1426,8 +1426,8 @@
       ctx.strokeStyle = isLightsOn ? 'rgba(167, 139, 250, 0.35)' : 'rgba(139, 92, 246, 0.15)';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(x + 8, y + h/2);
-      ctx.lineTo(x + w - 8, y + h/2);
+      ctx.moveTo(x + 8, y + h / 2);
+      ctx.lineTo(x + w - 8, y + h / 2);
       ctx.stroke();
 
       if (switchGlowTex) switchGlowTex.needsUpdate = true;
@@ -3997,8 +3997,8 @@
     labelMesh.position.set(0, -0.7, 0.01);
     switchGroup.add(labelMesh);
 
-    // Position the switch group on the Skills wall (Wall 2) top left corner, fully visible on mobile portrait
-    switchGroup.position.set(-4.2, 6.0, 7.7);
+    // Position the switch group on the Skills wall (Wall 2) top right corner, fully visible on mobile portrait
+    switchGroup.position.set(4.2, 6.0, 7.7);
     switchGroup.rotation.y = Math.PI; // Face inwards (parallel to skills cards)
     scene.add(switchGroup);
 
