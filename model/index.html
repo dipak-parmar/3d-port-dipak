@@ -1338,16 +1338,49 @@
     rightWall.position.set(10, 3.5, 0);
     scene.add(rightWall);
     function createAcousticWall(width, height, color = 0x6b6255) {
-      // Premium matte dark gray color (0x1f1f24) for high-contrast luxury look
+      const group = new THREE.Group();
+
+      // Main wall plane (Light gray golden)
       const wall = new THREE.Mesh(
         new THREE.PlaneGeometry(width, height),
         new THREE.MeshStandardMaterial({
-          color: 0x1f1f24,
-          roughness: 0.9,
-          metalness: 0.05
+          color: 0xe4e1d6,
+          roughness: 0.95,
+          metalness: 0.02
         })
       );
-      return wall;
+      group.add(wall);
+
+      // Minimalist white glowing borders
+      const lightMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        toneMapped: false
+      });
+
+      const stripThickness = 0.045; // sleek, minimalist width
+      const depthOffset = 0.01;      // protruding slightly forward to avoid Z-fighting
+
+      // Top light strip
+      const topLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), lightMaterial);
+      topLight.position.set(0, height / 2 - stripThickness / 2, depthOffset);
+      group.add(topLight);
+
+      // Bottom light strip
+      const bottomLight = new THREE.Mesh(new THREE.BoxGeometry(width, stripThickness, 0.02), lightMaterial);
+      bottomLight.position.set(0, -height / 2 + stripThickness / 2, depthOffset);
+      group.add(bottomLight);
+
+      // Left light strip
+      const leftLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), lightMaterial);
+      leftLight.position.set(-width / 2 + stripThickness / 2, 0, depthOffset);
+      group.add(leftLight);
+
+      // Right light strip
+      const rightLight = new THREE.Mesh(new THREE.BoxGeometry(stripThickness, height, 0.02), lightMaterial);
+      rightLight.position.set(width / 2 - stripThickness / 2, 0, depthOffset);
+      group.add(rightLight);
+
+      return group;
     }
     // ---------- gray corner border lines so each wall reads as distinct ----------
     function addCornerBorder(x, z) {
