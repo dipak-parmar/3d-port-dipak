@@ -441,7 +441,8 @@
       margin: 0;
       padding: 0;
       height: 100vh;
-      height: 100dvh; /* dvh for iOS Safari address bar layout dynamic resizing */
+      height: 100dvh;
+      /* dvh for iOS Safari address bar layout dynamic resizing */
       background: #0a0910;
       overflow: hidden;
       font-family: Arial, sans-serif;
@@ -478,7 +479,7 @@
     }
 
     /* Force all child objects of CSS3D layer to preserve 3D scaling and orientation properly on iOS mobile Safari */
-    #css-layer > div {
+    #css-layer>div {
       -webkit-transform-style: preserve-3d;
       transform-style: preserve-3d;
       -webkit-backface-visibility: visible;
@@ -1167,13 +1168,12 @@
     function adjustCamera() {
       const aspect = window.innerWidth / window.innerHeight;
 
-      // Responsive FOV logic that ensures side walls fit on mobile devices (portrait mode)
       if (aspect < 1.0) {
-        // Mobile portrait: increase FOV so side walls are not severely cropped
-        camera.fov = 85;
+        // Mobile portrait: zoom in slightly so text is clearly visible and large
+        camera.fov = 76;
       } else if (aspect < 1.6) {
-        // Tablet / square screens
-        camera.fov = 72;
+        // Tablet / square screens: zoom in slightly
+        camera.fov = 68;
       } else {
         // Desktop / widescreen
         camera.fov = 55;
@@ -4534,13 +4534,13 @@
 
       const aspect = window.innerWidth / window.innerHeight;
       let distanceMultiplier = 1.0;
-      
+
       if (aspect < 1.0) {
-        // Mobile portrait: move camera further away from target to ensure wall fits completely without cropping!
-        distanceMultiplier = 1.5;
+        // Mobile portrait: zoom in closer to make text highly legible and clear!
+        distanceMultiplier = 1.15;
       } else if (aspect < 1.6) {
-        // Tablet mode: slightly back
-        distanceMultiplier = 1.25;
+        // Tablet mode: zoom in closer
+        distanceMultiplier = 1.05;
       }
 
       gsap.to(camera.position, {
@@ -4699,7 +4699,8 @@
       #nav-btn-right {
         width: 44px !important;
         height: 44px !important;
-        top: 80% !important; /* Low enough to avoid intersection with central 3D meshes */
+        top: 80% !important;
+        /* Low enough to avoid intersection with central 3D meshes */
         transform: translateY(-50%) !important;
       }
 
