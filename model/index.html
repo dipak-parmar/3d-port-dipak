@@ -1381,21 +1381,76 @@
       toneMapped: false
     });
 
+    let switchGlowCanvas, switchGlowCtx, switchGlowTex;
+    function drawSwitchGlow(isLightsOn) {
+      if (!switchGlowCanvas) return;
+      const ctx = switchGlowCtx;
+      ctx.clearRect(0, 0, 256, 512);
+
+      // Vibrant neon purple glow matching user request
+      const glowColor = isLightsOn ? 'rgba(167, 139, 250, 0.95)' : 'rgba(139, 92, 246, 0.35)'; // brighter purple when ON
+      const shadowBlurAmount = isLightsOn ? 28 : 12;
+      const strokeColor = isLightsOn ? '#c084fc' : '#7c3aed';
+
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = shadowBlurAmount;
+
+      // Pill shape dimensions in canvas (256x512)
+      const x = 78; // width 100
+      const y = 86; // height 340
+      const w = 100;
+      const h = 340;
+      const r = 50; // half of width for perfect capsule roundness
+
+      ctx.fillStyle = '#141416';
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 6;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      ctx.fill();
+      ctx.shadowColor = 'transparent'; // stop shadow bleed on outline stroke
+      ctx.stroke();
+
+      // Subtle split line across middle
+      ctx.strokeStyle = isLightsOn ? 'rgba(167, 139, 250, 0.35)' : 'rgba(139, 92, 246, 0.15)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 8, y + h/2);
+      ctx.lineTo(x + w - 8, y + h/2);
+      ctx.stroke();
+
+      if (switchGlowTex) switchGlowTex.needsUpdate = true;
+    }
+
     function toggleRoomLights() {
       roomLightsOn = !roomLightsOn;
 
-      // Animate physical rocker switch tilt (around local z-axis since it lies on the right wall facing -X)
+      // Animate physical rocker switch tilt around local X-axis (horizontal axis pivot for Skills wall)
       if (toggleButton) {
         gsap.to(toggleButton.rotation, {
-          z: roomLightsOn ? 0.18 : -0.18,
+          x: roomLightsOn ? 0.15 : -0.15,
           duration: 0.15,
           ease: "power2.inOut"
         });
       }
 
+      // Redraw public glow texture
+      drawSwitchGlow(roomLightsOn);
+
       if (roomLightsOn) {
-        wallMaterial.color.setHex(0xffffff); // beautiful clean white when ON
-        borderLightMaterial.color.setHex(0xffffff); // Glow White when ON (under and upper border stripes light up!)
+        wallMaterial.color.setHex(0xf3effc); // luxurious soft lavender/white when ON
+        borderLightMaterial.color.setHex(0x8b5cf6); // glowing purple under and upper borders when ON!
 
         // Set red/blue lights to very subtle intensities (minor-minor) when switch is ON
         if (leftRedLight) leftRedLight.intensity = 8.0;
@@ -3867,41 +3922,38 @@
       // allFloaters.push({ group: [frame, photo, glowingBorder], baseY: pos.y, phase: Math.random() * Math.PI * 2 });
     });
 
-    // ---------- 3D Modern Black Switch (with Chrome Border & Rocker Button) ----------
-    // Positioned below certificates, left side (Z = -6.5, Y = 4.5, X = 9.76)
+    // ---------- 3D Capsule Pill Switch with Neon Purple Outline Glow (Skills Wall, Top Left) ----------
     const switchGroup = new THREE.Group();
 
-    // 0. Minimalist Glowing White Border underlight (thin surround behind plate)
-    const switchGlow = new THREE.Mesh(
-      new THREE.BoxGeometry(0.09, 0.47, 0.47), // slightly larger than the 0.45 plate
-      new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })
-    );
-    switchGlow.position.set(9.785, 4.5, -6.5);
-    switchGroup.add(switchGlow);
+    // Setup canvas drawing & CanvasTexture for the pill plate glow
+    switchGlowCanvas = document.createElement('canvas');
+    switchGlowCanvas.width = 256;
+    switchGlowCanvas.height = 512;
+    switchGlowCtx = switchGlowCanvas.getContext('2d');
+    switchGlowTex = new THREE.CanvasTexture(switchGlowCanvas);
+    switchGlowTex.colorSpace = THREE.SRGBColorSpace;
+    drawSwitchGlow(false); // Initialize in OFF state
 
-    // 1. Outer Backplate - Matte Black (clean plastic vibe)
-    const switchPlate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.1, 0.45, 0.45),
-      new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.95, metalness: 0.1 })
-    );
-    switchPlate.position.set(9.78, 4.5, -6.5);
-    switchGroup.add(switchPlate);
+    const switchGlowMat = new THREE.MeshBasicMaterial({
+      map: switchGlowTex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const switchGlowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 1.15), switchGlowMat);
+    // Backing capsule base lies flat in local space
+    switchGlowMesh.position.set(0, 0, 0);
+    switchGroup.add(switchGlowMesh);
 
-    // 2. Chrome inner border backing plate - highly reflective shinny silver chrome
-    const chromeBorder = new THREE.Mesh(
-      new THREE.BoxGeometry(0.11, 0.37, 0.37),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.0, metalness: 1.0 })
-    );
-    chromeBorder.position.set(9.77, 4.5, -6.5);
-    switchGroup.add(chromeBorder);
-
-    // 3. Central Rocker Switch Button - Matte Black, tilts based on state
-    toggleButton = new THREE.Mesh(
-      new THREE.BoxGeometry(0.13, 0.34, 0.34),
-      new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.9, metalness: 0.15 })
-    );
-    toggleButton.position.set(9.75, 4.5, -6.5);
-    toggleButton.rotation.z = -0.18; // default OFF tilt direction
+    // Rocket switch button - CapsuleGeometry aligned with backing glow texture
+    const buttonGeom = new THREE.CapsuleGeometry(0.09, 0.38, 16, 32);
+    const buttonMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1e, // Obsidian dark gray matching image
+      roughness: 0.85,
+      metalness: 0.2
+    });
+    toggleButton = new THREE.Mesh(buttonGeom, buttonMat);
+    toggleButton.position.set(0, 0, 0.02);
+    toggleButton.rotation.x = -0.15; // default OFF tilt
     toggleButton.userData = {
       baseScale: 1.0,
       onClick: () => {
@@ -3911,12 +3963,12 @@
     switchGroup.add(toggleButton);
     interactiveObjects.push(toggleButton);
 
-    // Large transparent hit box to make tapping the switch on mobile extremely easy
+    // Large transparent hit box for mobile click friendliness
     const switchHitBox = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.9, 0.9),
+      new THREE.BoxGeometry(0.8, 1.6, 0.3),
       new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.0, depthWrite: false })
     );
-    switchHitBox.position.set(9.73, 4.5, -6.5);
+    switchHitBox.position.set(0, -0.2, 0.02);
     switchHitBox.userData = {
       baseScale: 1.0,
       onClick: () => {
@@ -3926,13 +3978,13 @@
     switchGroup.add(switchHitBox);
     interactiveObjects.push(switchHitBox);
 
-    // 4. Large Label Text ("FOR LIGHT") placed neatly below the switch
+    // Large text label ("FOR LIGHT") placed neatly under capsule switch
     const labelTex = makeTextTexture("FOR LIGHT", {
       width: 512,
       height: 128,
       font: "bold 38px Montserrat, Arial, sans-serif",
-      color: "#ffffff", // bright white for high legibility
-      glow: "rgba(255, 255, 255, 0.35)",
+      color: "#ffffff",
+      glow: "rgba(139, 92, 246, 0.45)", // Purple glow matching theme
       align: "center"
     });
     const labelMat = new THREE.MeshBasicMaterial({
@@ -3940,11 +3992,14 @@
       transparent: true,
       side: THREE.DoubleSide
     });
-    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.25), labelMat);
-    labelMesh.rotation.y = -Math.PI / 2;
-    labelMesh.position.set(9.77, 4.05, -6.5);
+    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.2), labelMat);
+    // Face inwards when group rotates
+    labelMesh.position.set(0, -0.7, 0.01);
     switchGroup.add(labelMesh);
 
+    // Position the switch group on the Skills wall (Wall 2) top left corner
+    switchGroup.position.set(-4.8, 5.5, 7.7);
+    switchGroup.rotation.y = Math.PI; // Face inwards (parallel to skills cards)
     scene.add(switchGroup);
 
     // (Social Icons Column moved to Wall 4 right side)
