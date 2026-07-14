@@ -3978,11 +3978,11 @@
     switchGroup.add(switchHitBox);
     interactiveObjects.push(switchHitBox);
 
-    // Large text label ("FOR LIGHT") placed neatly under capsule switch
-    const labelTex = makeTextTexture("FOR LIGHT", {
+    // Large text label ("LIGHT") placed neatly under capsule switch with 30px font size
+    const labelTex = makeTextTexture("LIGHT", {
       width: 512,
       height: 128,
-      font: "bold 38px Montserrat, Arial, sans-serif",
+      font: "bold 30px Montserrat, Arial, sans-serif",
       color: "#ffffff",
       glow: "rgba(139, 92, 246, 0.45)", // Purple glow matching theme
       align: "center"
@@ -3997,8 +3997,8 @@
     labelMesh.position.set(0, -0.7, 0.01);
     switchGroup.add(labelMesh);
 
-    // Position the switch group on the Skills wall (Wall 2) top left corner
-    switchGroup.position.set(-4.8, 5.5, 7.7);
+    // Position the switch group on the Skills wall (Wall 2) top left corner, fully visible on mobile portrait
+    switchGroup.position.set(-4.2, 6.0, 7.7);
     switchGroup.rotation.y = Math.PI; // Face inwards (parallel to skills cards)
     scene.add(switchGroup);
 
