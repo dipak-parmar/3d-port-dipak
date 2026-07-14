@@ -1038,6 +1038,12 @@
     container.appendChild(cssRenderer.domElement);
 
     // Global arrays & loader declarations
+    var leftRedLight, rightBlueLight;
+    var mLeftRedLight, mRightBlueLight;
+    var wallNeonGroup;
+    var toggleButton;
+    var roomLightsOn = false;
+
     const allFloaters = [];
     const interactiveObjects = [];
     // Create loading manager to track actual assets loading progress
@@ -1321,11 +1327,6 @@
     scene.add(ceiling);
 
     // ---------- Room Light Toggle Variables & Function ----------
-    let wallNeonGroup;
-    let toggleButton;
-    let roomLightsOn = false;
-    let leftRedLight, rightBlueLight;
-    let mLeftRedLight, mRightBlueLight;
 
     const wallMaterial = new THREE.MeshStandardMaterial({
       color: 0x1f1f24,
