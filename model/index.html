@@ -4487,21 +4487,62 @@
       cssRenderer.render(cssScene, camera);
     }
     // Setup camera navigation buttons (rotate clockwise / counter-clockwise around target)
-    function rotateCamera(direction) {
-      // direction: -1 for left, 1 for right
-      const angle = direction * (Math.PI / 4.5); // 40 degrees rotation step
+    // Discrete Orthogonal Viewpoints facing the 4 main walls
+    const viewpoints = [
+      // View 0: About Us Wall (Back wall z = -8, target at z = -8, camera at positive Z axis)
+      { x: 0, y: 2.2, z: 4.8 },
+      // View 1: Projects Wall (Left wall x = -10, target at x = -10, camera at positive X axis)
+      { x: 4.8, y: 2.2, z: 0 },
+      // View 2: Skills Wall (Front wall z = 8, target at z = 8, camera at negative Z axis)
+      { x: 0, y: 2.2, z: -4.8 },
+      // View 3: Certificates & Switch Wall (Right wall x = 10, target at x = 10, camera at negative X axis)
+      { x: -4.8, y: 2.2, z: 0 }
+    ];
 
+    let currentViewIndex = -1;
+
+    function getClosestViewIndex() {
       const dx = camera.position.x - controls.target.x;
       const dz = camera.position.z - controls.target.z;
+      const currentAngle = Math.atan2(dx, dz);
 
-      const targetX = dx * Math.cos(angle) - dz * Math.sin(angle);
-      const targetZ = dx * Math.sin(angle) + dz * Math.cos(angle);
+      let closestIdx = 0;
+      let minDiff = Infinity;
+
+      for (let i = 0; i < viewpoints.length; i++) {
+        const vpAngle = Math.atan2(viewpoints[i].x, viewpoints[i].z);
+        let diff = Math.abs(currentAngle - vpAngle);
+        while (diff > Math.PI) diff = Math.abs(diff - 2 * Math.PI);
+
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      }
+      return closestIdx;
+    }
+
+    function goToViewpoint(index) {
+      currentViewIndex = (index + viewpoints.length) % viewpoints.length;
+      const vp = viewpoints[currentViewIndex];
+
+      const aspect = window.innerWidth / window.innerHeight;
+      let distanceMultiplier = 1.0;
+      
+      if (aspect < 1.0) {
+        // Mobile portrait: move camera further away from target to ensure wall fits completely without cropping!
+        distanceMultiplier = 1.5;
+      } else if (aspect < 1.6) {
+        // Tablet mode: slightly back
+        distanceMultiplier = 1.25;
+      }
 
       gsap.to(camera.position, {
-        x: controls.target.x + targetX,
-        z: controls.target.z + targetZ,
-        duration: 1.0,
-        ease: "power3.out",
+        x: vp.x * distanceMultiplier,
+        y: vp.y,
+        z: vp.z * distanceMultiplier,
+        duration: 1.2,
+        ease: "power3.inOut",
         onUpdate: () => {
           controls.update();
         }
@@ -4513,11 +4554,32 @@
 
     leftBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      rotateCamera(-1);
+      const closest = getClosestViewIndex();
+      const currentAngle = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+      const vpAngle = Math.atan2(viewpoints[closest].x, viewpoints[closest].z);
+      let diff = Math.abs(currentAngle - vpAngle);
+      while (diff > Math.PI) diff = Math.abs(diff - 2 * Math.PI);
+
+      if (diff < 0.15) {
+        goToViewpoint(closest - 1);
+      } else {
+        goToViewpoint(closest);
+      }
     });
+
     rightBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      rotateCamera(1);
+      const closest = getClosestViewIndex();
+      const currentAngle = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+      const vpAngle = Math.atan2(viewpoints[closest].x, viewpoints[closest].z);
+      let diff = Math.abs(currentAngle - vpAngle);
+      while (diff > Math.PI) diff = Math.abs(diff - 2 * Math.PI);
+
+      if (diff < 0.15) {
+        goToViewpoint(closest + 1);
+      } else {
+        goToViewpoint(closest);
+      }
     });
 
     // Intercept and stop propagation of pointer movements and clicks to prevent background hover/raycasts
