@@ -1135,9 +1135,10 @@
 
       // Also adjust OrbitControls distance limit and disable autoRotate on mobile/tablet to avoid jitter/lag
       if (aspect < 1.6) {
-        controls.maxDistance = 6.5; // Limit zoom out to 6.5 max
+        controls.enableZoom = false; // Disable zoom completely on mobile/tablet to prevent zoom out
         controls.autoRotate = false;
       } else {
+        controls.enableZoom = true;
         controls.maxDistance = 6.5;
         controls.autoRotate = false;
       }
