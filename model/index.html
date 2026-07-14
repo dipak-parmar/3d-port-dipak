@@ -4714,8 +4714,8 @@
         // Extract scale multiplier from data-zoom attribute
         cameraZoomScale = parseFloat(btn.getAttribute('data-zoom'));
 
-        // Recalculate camera snapping target and animate
-        const closestView = currentViewIndex >= 0 ? currentViewIndex : getClosestViewIndex();
+        // Always calculate the closest view index dynamically from the current camera position
+        const closestView = getClosestViewIndex();
         goToViewpoint(closestView);
       });
     });
