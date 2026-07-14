@@ -1131,19 +1131,19 @@
 
     const mVioletLight = new THREE.PointLight(0x8b5cf6, 1.5, 20, 2);
     mVioletLight.position.set(4, 5, -2);
-    modelScene.add(mVioletLight);
+    scene.add(mVioletLight);
 
     const mWallLight = new THREE.PointLight(0xffffff, 5.0, 18, 2);
     mWallLight.position.set(7.5, 4, 0);
-    modelScene.add(mWallLight);
+    scene.add(mWallLight);
 
     const mFrontLight = new THREE.PointLight(0xffffff, 12.0, 16, 1.5);
     mFrontLight.position.set(3.0, 2.5, 5.0);
-    modelScene.add(mFrontLight);
+    scene.add(mFrontLight);
 
     const mTopLight = new THREE.PointLight(0xffffff, 10.0, 12, 1.5);
     mTopLight.position.set(5.8, 6.0, 3.5);
-    modelScene.add(mTopLight);
+    scene.add(mTopLight);
 
     // ---------- controls: ORBIT + ZOOM, orbiting room center ----------
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -4035,7 +4035,7 @@
       // Rotate it more to the right side (clockwise Y angle) as requested
       modelGroup.rotation.y = Math.PI * 1.0;
 
-      modelScene.add(modelGroup);
+      scene.add(modelGroup);
       loadedModel = modelGroup;
     }, undefined, (err) => {
       console.error('Error loading Glb:', err);
