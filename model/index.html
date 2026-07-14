@@ -4632,9 +4632,9 @@
       }
 
       gsap.to(camera.position, {
-        x: vp.x * distanceMultiplier * cameraZoomScale,
+        x: (vp.x * distanceMultiplier) / cameraZoomScale,
         y: vp.y,
-        z: vp.z * distanceMultiplier * cameraZoomScale,
+        z: (vp.z * distanceMultiplier) / cameraZoomScale,
         duration: 1.2,
         ease: "power3.inOut",
         onUpdate: () => {
