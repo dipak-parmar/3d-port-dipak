@@ -1337,21 +1337,58 @@
     rightWall.rotation.y = -Math.PI / 2;
     rightWall.position.set(10, 3.5, 0);
     scene.add(rightWall);
-    function createAcousticWall(width, height, color = 0xffffff) {
-      const wall = new THREE.Mesh(
+    function createAcousticWall(width, height, color = 0x6b6255) {
+      const group = new THREE.Group();
+
+      const back = new THREE.Mesh(
         new THREE.PlaneGeometry(width, height),
         new THREE.MeshStandardMaterial({
-          color: 0xffffff, // solid matte white
-          roughness: 0.9,
-          metalness: 0.05
+          color: color,
+          roughness: 1
         })
       );
-      return wall;
+      group.add(back);
+
+      const slatWidth = 0.18;
+      const gap = 0.18;
+
+      let count = 0;
+      for (let x = -width / 2; x <= width / 2; x += slatWidth + gap) {
+        count++;
+      }
+
+      const slatGeo = new THREE.BoxGeometry(slatWidth, height, 0.12);
+      const slatMat = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.8
+      });
+
+      const instancedMesh = new THREE.InstancedMesh(slatGeo, slatMat, count);
+      let idx = 0;
+      const dummy = new THREE.Object3D();
+
+      for (let x = -width / 2; x <= width / 2; x += slatWidth + gap) {
+        dummy.position.set(x, 0, 0.07);
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(idx++, dummy.matrix);
+      }
+
+      group.add(instancedMesh);
+      return group;
     }
     // ---------- gray corner border lines so each wall reads as distinct ----------
     function addCornerBorder(x, z) {
-      // Disabled to prevent unwanted black corner lines
+      const border = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14, 14.1, 0.14),
+        new THREE.MeshStandardMaterial({ color: 0x9a97a4, roughness: 0.5, metalness: 0.2 })
+      );
+      border.position.set(x, 3.5, z);
+      scene.add(border);
     }
+    addCornerBorder(-10, -8);
+    addCornerBorder(10, -8);
+    addCornerBorder(10, 8);
+    addCornerBorder(-10, 8);
 
     // ---------- text texture helpers ----------
     function makeTextTexture(text, { width = 1024, height = 256, font = 'bold 110px Arial', color = '#f5f3fa', glow = '#8b5cf6', align = 'center' } = {}) {
