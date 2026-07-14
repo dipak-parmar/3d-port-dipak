@@ -1340,13 +1340,13 @@
     function createAcousticWall(width, height, color = 0x6b6255) {
       const group = new THREE.Group();
 
-      // Main wall plane (Light gray golden)
+      // Main wall plane (Matte dark gray)
       const wall = new THREE.Mesh(
         new THREE.PlaneGeometry(width, height),
         new THREE.MeshStandardMaterial({
-          color: 0xe4e1d6,
-          roughness: 0.95,
-          metalness: 0.02
+          color: 0x1f1f24,
+          roughness: 0.9,
+          metalness: 0.05
         })
       );
       group.add(wall);
