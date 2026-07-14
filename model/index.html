@@ -1125,8 +1125,8 @@
       // For desktop (aspect >= 1.6), we use fov = 55.
       // For mobile/tablet (aspect < 1.6), we widen the fov so the whole room fits.
       if (aspect < 1.6) {
-        // simple interpolation: as aspect goes from 1.6 down to 1.2, fov goes from 55 up to 76.
-        const clampedAspect = Math.max(aspect, 1.2);
+        // simple interpolation: as aspect goes from 1.6 down to 1.5, fov goes from 55 up to 76.
+        const clampedAspect = Math.max(aspect, 1.5);
         const targetFov = 55 + (1.6 - clampedAspect) * 35;
         camera.fov = Math.min(targetFov, 76); 
       } else {
