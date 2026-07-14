@@ -3939,20 +3939,20 @@
       transparent: true,
       side: THREE.DoubleSide
     });
-    const switchGlowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 1.15), switchGlowMat);
+    const switchGlowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.6), switchGlowMat);
     // Backing capsule base lies flat in local space
     switchGlowMesh.position.set(0, 0, 0);
     switchGroup.add(switchGlowMesh);
 
     // Rocket switch button - CapsuleGeometry aligned with backing glow texture
-    const buttonGeom = new THREE.CapsuleGeometry(0.09, 0.38, 16, 32);
+    const buttonGeom = new THREE.CapsuleGeometry(0.125, 0.55, 16, 32);
     const buttonMat = new THREE.MeshStandardMaterial({
       color: 0x1a1a1e, // Obsidian dark gray matching image
       roughness: 0.85,
       metalness: 0.2
     });
     toggleButton = new THREE.Mesh(buttonGeom, buttonMat);
-    toggleButton.position.set(0, 0, 0.02);
+    toggleButton.position.set(0, 0, 0.03);
     toggleButton.rotation.x = -0.15; // default OFF tilt
     toggleButton.userData = {
       baseScale: 1.0,
@@ -3965,10 +3965,10 @@
 
     // Large transparent hit box for mobile click friendliness
     const switchHitBox = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 1.6, 0.3),
+      new THREE.BoxGeometry(1.1, 2.2, 0.4),
       new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.0, depthWrite: false })
     );
-    switchHitBox.position.set(0, -0.2, 0.02);
+    switchHitBox.position.set(0, -0.2, 0.03);
     switchHitBox.userData = {
       baseScale: 1.0,
       onClick: () => {
@@ -3978,11 +3978,11 @@
     switchGroup.add(switchHitBox);
     interactiveObjects.push(switchHitBox);
 
-    // Large text label ("LIGHT") placed neatly under capsule switch with 30px font size
+    // Large text label ("LIGHT") placed neatly under capsule switch with 100px font size
     const labelTex = makeTextTexture("LIGHT", {
       width: 512,
       height: 128,
-      font: "bold 30px Montserrat, Arial, sans-serif",
+      font: "bold 100px Montserrat, Arial, sans-serif",
       color: "#ffffff",
       glow: "rgba(139, 92, 246, 0.45)", // Purple glow matching theme
       align: "center"
@@ -3992,13 +3992,13 @@
       transparent: true,
       side: THREE.DoubleSide
     });
-    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.2), labelMat);
+    const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.28), labelMat);
     // Face inwards when group rotates
-    labelMesh.position.set(0, -0.7, 0.01);
+    labelMesh.position.set(0, -1.0, 0.02);
     switchGroup.add(labelMesh);
 
     // Position the switch group on the Skills wall (Wall 2) top right corner, fully visible on mobile portrait
-    switchGroup.position.set(4.2, 6.0, 7.7);
+    switchGroup.position.set(5.2, 6.0, 7.7);
     switchGroup.rotation.y = Math.PI; // Face inwards (parallel to skills cards)
     scene.add(switchGroup);
 
