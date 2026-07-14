@@ -966,6 +966,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     import { Reflector } from 'three/addons/objects/Reflector.js';
 
     const container = document.getElementById('container');
@@ -3484,7 +3485,12 @@
     // --- Load clothes.glb, color jackets, and crop bottom shoe compartments ---
     const clothesClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 2.25); // Crops below world coordinate Y = -2.25
 
+    // Setup Draco decoder
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+
     const clothesLoader = new GLTFLoader(loadingManager);
+    clothesLoader.setDRACOLoader(dracoLoader);
     clothesLoader.load('clothes.glb', (gltf) => {
       const clothesModel = gltf.scene;
 
@@ -3796,6 +3802,7 @@
     // Load and render user's custom 3D model on the resume wall (center empty space)
     let loadedModel = null;
     const gltfLoader = new GLTFLoader(loadingManager);
+    gltfLoader.setDRACOLoader(dracoLoader);
     gltfLoader.load('mod/generated_model (6).glb', (gltf) => {
       const model = gltf.scene;
 
