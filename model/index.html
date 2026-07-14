@@ -4474,8 +4474,8 @@
           document.documentElement.classList.remove('preloader-active');
 
           gsap.timeline()
-            .set("#nav-btn-left, #nav-btn-right", { display: "flex" })
-            .to("#nav-btn-left, #nav-btn-right", { opacity: 1, duration: 0.6, ease: "power2.out" });
+            .set("#nav-btn-left, #nav-btn-right, #zoom-controls", { display: "flex" })
+            .to("#nav-btn-left, #nav-btn-right, #zoom-controls", { opacity: 1, duration: 0.6, ease: "power2.out" });
         }
       });
     }
@@ -4593,6 +4593,7 @@
     ];
 
     let currentViewIndex = -1;
+    let cameraZoomScale = 1.0; // Dynamic zoom multiplier selected by user (0.5x, 1.0x, 1.5x)
 
     function getClosestViewIndex() {
       const dx = camera.position.x - controls.target.x;
@@ -4631,9 +4632,9 @@
       }
 
       gsap.to(camera.position, {
-        x: vp.x * distanceMultiplier,
+        x: vp.x * distanceMultiplier * cameraZoomScale,
         y: vp.y,
-        z: vp.z * distanceMultiplier,
+        z: vp.z * distanceMultiplier * cameraZoomScale,
         duration: 1.2,
         ease: "power3.inOut",
         onUpdate: () => {
@@ -4683,6 +4684,40 @@
       btn.addEventListener('pointerup', stopProp);
       btn.addEventListener('mousedown', stopProp);
       btn.addEventListener('mouseup', stopProp);
+    });
+    // Zoom control presets DOM interaction setup
+    const zoomBtns = document.querySelectorAll('.zoom-btn');
+    zoomBtns.forEach(btn => {
+      // Prevent orbit control and hovering behind the buttons
+      btn.addEventListener('pointermove', stopProp);
+      btn.addEventListener('pointerdown', stopProp);
+      btn.addEventListener('pointerup', stopProp);
+      btn.addEventListener('mousedown', stopProp);
+      btn.addEventListener('mouseup', stopProp);
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        // Remove active class from all zoom buttons and restore base style
+        zoomBtns.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'none';
+          b.style.color = '#cfc7de';
+          b.style.fontWeight = '600';
+        });
+
+        // Add active class to clicked button and style
+        btn.classList.add('active');
+        btn.style.background = 'rgba(139, 92, 246, 0.3)';
+        btn.style.color = '#dfb86c';
+        btn.style.fontWeight = '700';
+
+        // Extract scale multiplier from data-zoom attribute
+        cameraZoomScale = parseFloat(btn.getAttribute('data-zoom'));
+
+        // Recalculate camera snapping target and animate
+        const closestView = currentViewIndex >= 0 ? currentViewIndex : getClosestViewIndex();
+        goToViewpoint(closestView);
+      });
     });
 
     animate();
@@ -4764,7 +4799,32 @@
     </svg>
   </button>
 
+  <!-- Camera Zoom Presets (0.5x, 1x, 1.5x) bottom center -->
+  <div id="zoom-controls" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: none; gap: 6px; background: rgba(20, 18, 25, 0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 2px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 30px; z-index: 10000000; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4); opacity: 0; align-items: center; transition: all 0.3s ease;">
+    <button class="zoom-btn" data-zoom="0.5" style="background: none; border: none; color: #cfc7de; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 6px 16px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">0.5x</button>
+    <button class="zoom-btn active" data-zoom="1.0" style="background: rgba(139, 92, 246, 0.3); border: none; color: #dfb86c; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 700; padding: 6px 16px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.0x</button>
+    <button class="zoom-btn" data-zoom="1.5" style="background: none; border: none; color: #cfc7de; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 6px 16px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.5x</button>
+  </div>
+
   <style>
+    .zoom-btn:hover {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+    .zoom-btn:active {
+      transform: scale(0.95);
+    }
+    @media (max-width: 768px) {
+      #zoom-controls {
+        bottom: 20px !important;
+        padding: 4px 8px !important;
+      }
+      .zoom-btn {
+        font-size: 12px !important;
+        padding: 5px 12px !important;
+      }
+    }
+
     #nav-btn-left:hover,
     #nav-btn-right:hover {
       background: rgba(139, 92, 246, 0.2) !important;
