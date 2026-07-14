@@ -4700,13 +4700,13 @@
         // Remove active class from all zoom buttons and reset style colors
         zoomBtns.forEach(b => {
           b.classList.remove('active');
-          b.style.color = 'rgba(255, 255, 255, 0.5)';
+          b.style.color = '#cfc7de';
           b.style.fontWeight = '600';
         });
 
         // Add active class to clicked button and style
         btn.classList.add('active');
-        btn.style.color = '#0d0c10';
+        btn.style.color = '#dfb86c';
         btn.style.fontWeight = '700';
 
         // Dynamically slide and morph the liquid gooey bubble to cover coordinates of the clicked button
@@ -4732,6 +4732,9 @@
       if (activeBtn && bubble) {
         bubble.style.left = `${activeBtn.offsetLeft}px`;
         bubble.style.width = `${activeBtn.offsetWidth}px`;
+        // Ensure color and weights sync for initial/fallback state
+        activeBtn.style.color = '#dfb86c';
+        activeBtn.style.fontWeight = '700';
       }
     };
     window.addEventListener('resize', initZoomBubble);
@@ -4818,23 +4821,23 @@
 
   <!-- Camera Zoom Presets (0.5x, 1x, 1.5x) bottom center -->
   <div id="zoom-controls"
-    style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: none; background: rgba(10, 10, 12, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255, 255, 255, 0.15); padding: 5px 6px; border-radius: 30px; z-index: 10000000; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); opacity: 0; align-items: center; transition: all 0.3s ease;">
+    style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: none; background: rgba(20, 18, 25, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 2px solid rgba(139, 92, 246, 0.4); padding: 5px 6px; border-radius: 30px; z-index: 10000000; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); opacity: 0; align-items: center; transition: all 0.3s ease;">
     <!-- Liquid background layer with SVG gooey filter -->
     <div class="liquid-bg"
       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 30px; filter: url(#gooey-filter); pointer-events: none; overflow: hidden; z-index: 1;">
-      <!-- Morphing slide bubble (Glowy White Light Liquid bubble) -->
+      <!-- Morphing slide bubble (Glowy Neon Purple Liquid bubble) -->
       <div id="zoom-bubble"
-        style="position: absolute; top: 5px; left: 6px; width: 62.5px; height: calc(100% - 10px); background: #ffffff; border-radius: 20px; box-shadow: 0 0 15px rgba(255, 255, 255, 0.55); transition: all 0.45s cubic-bezier(0.68, -0.6, 0.32, 1.6);">
+        style="position: absolute; top: 5px; left: 6px; width: 62.5px; height: calc(100% - 10px); background: #8b5cf6; border-radius: 20px; box-shadow: 0 0 15px rgba(139, 92, 246, 0.6); transition: all 0.45s cubic-bezier(0.68, -0.6, 0.32, 1.6);">
       </div>
     </div>
     <!-- Interactive foreground text layer (uncorrupted by gooey pixel filter) -->
     <div style="display: flex; gap: 4px; position: relative; z-index: 2;">
       <button class="zoom-btn" data-zoom="0.5"
-        style="background: none; border: none; color: rgba(255, 255, 255, 0.5); font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">0.5x</button>
+        style="background: none; border: none; color: #cfc7de; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">0.5x</button>
       <button class="zoom-btn active" data-zoom="1.0"
-        style="background: none; border: none; color: #0d0c10; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 700; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.0x</button>
+        style="background: none; border: none; color: #dfb86c; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 700; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.0x</button>
       <button class="zoom-btn" data-zoom="1.5"
-        style="background: none; border: none; color: rgba(255, 255, 255, 0.5); font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.5x</button>
+        style="background: none; border: none; color: #cfc7de; font-family: Montserrat, sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s ease;">1.5x</button>
     </div>
   </div>
 
@@ -4852,7 +4855,6 @@
   <style>
     .zoom-btn:hover {
       color: #ffffff !important;
-      background: rgba(255, 255, 255, 0.08) !important;
     }
 
     .zoom-btn:active {
@@ -4860,7 +4862,7 @@
     }
 
     .zoom-btn.active {
-      color: #0d0c10 !important;
+      color: #dfb86c !important;
       font-weight: 700 !important;
     }
 
