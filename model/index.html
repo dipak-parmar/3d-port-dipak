@@ -4624,10 +4624,38 @@
       let isPopupOpen = false;
       const startTime = performance.now();
 
-      // EmailJS configuration variables
-      const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; 
-      const EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID'; 
-      const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID'; 
+      // FormSubmit Configuration
+      const FORMSUBMIT_EMAIL = 'dipakparmar2466@gmail.com';
+      const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${FORMSUBMIT_EMAIL}`;
+
+      // Helper function to send requests to FormSubmit.co
+      function sendToFormSubmit(subject, data) {
+        return fetch(FORMSUBMIT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            _subject: subject,
+            _captcha: 'false',
+            _template: 'table',
+            ...data
+          })
+        })
+          .then(response => {
+            if (!response.ok) {
+              console.warn('[FormSubmit Alert] Response not ok:', response);
+            }
+            return response.json();
+          })
+          .then(resData => {
+            console.log('[FormSubmit Success]:', resData);
+          })
+          .catch(err => {
+            console.error('[FormSubmit Connection Error]:', err);
+          });
+      }
 
       // Check session state on load and log guidance for developers
       if (sessionStorage.getItem('popup_submitted_or_skipped')) {
@@ -4718,7 +4746,7 @@
                 if (exploredWalls.size === 4 && !popupTriggered) {
                   popupTriggered = true;
                   if (wallExploreTimer) clearTimeout(wallExploreTimer);
-                  
+
                   // Trigger popup opening after 800ms
                   setTimeout(openLeadPopup, 800);
                 }
@@ -4889,21 +4917,10 @@
           page_url: meta.page_url
         };
 
-        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-            .then(() => {
-              proceedToSuccess();
-            })
-            .catch((err) => {
-              console.error('EmailJS submission failed:', err);
-              proceedToSuccess();
-            });
-        } else {
-          console.log('%c[Lead Submission captured]', 'color: #10b981; font-weight: bold;', templateParams);
-          setTimeout(() => {
+        sendToFormSubmit(`[Lead Captured] Submission from ${nameVal}`, templateParams)
+          .finally(() => {
             proceedToSuccess();
-          }, 1000);
-        }
+          });
 
         function proceedToSuccess() {
           submitBtn.innerHTML = originalBtnHTML;
@@ -4942,28 +4959,13 @@
       function trackAnalytics(method) {
         const meta = getVisitorMetadata();
         const analyticsData = {
-          event: 'popup_skipped',
-          skip_method: method,
+          event: `Popup Skipped/Closed via ${method}`,
           ...meta
         };
 
         console.log('%c[Analytics Event: popup_skipped]', 'color: #3b82f6; font-weight: bold;', analyticsData);
 
-        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            visitor_name: `Analytics Event: popup_skipped [Method: ${method}]`,
-            visitor_email: 'analytics@portfolio.local',
-            date_time: meta.date_time,
-            browser: meta.browser,
-            os: meta.os,
-            device_type: meta.device_type,
-            screen_resolution: meta.screen_resolution,
-            language: meta.language,
-            referrer: meta.referrer,
-            time_spent: meta.time_spent,
-            page_url: meta.page_url
-          }).catch(err => console.error('Error sending analytics event via EmailJS:', err));
-        }
+        sendToFormSubmit(`[Popup Action] ${method}`, analyticsData);
       }
 
       // Bind events to DOM elements
@@ -5002,15 +5004,7 @@
       leadOverlay.addEventListener('mousedown', stopPointerEvents);
       leadOverlay.addEventListener('mouseup', stopPointerEvents);
 
-      // Dyn-load EmailJS SDK
-      const emailJsScript = document.createElement('script');
-      emailJsScript.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
-      emailJsScript.onload = () => {
-        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
-          emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-        }
-      };
-      document.head.appendChild(emailJsScript);
+      // Removed EmailJS SDK loading since we are using FormSubmit AJAX endpoint
 
       // Expose helpers globally to allow direct debugging
       window.openLeadPopup = openLeadPopup;
@@ -5268,7 +5262,9 @@
         </div>
 
         <!-- Left half: inputs & details (50%) -->
-        <div style="width: 50%; padding: 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;" class="popup-left-half">
+        <div
+          style="width: 50%; padding: 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;"
+          class="popup-left-half">
           <!-- Header -->
           <h2
             style="margin: 0 0 12px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.25; background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -5283,21 +5279,25 @@
             <!-- Name Input Field -->
             <div style="display: flex; flex-direction: column; width: 100%;">
               <label for="visitor-name"
-                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Full Name</label>
+                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Full
+                Name</label>
               <input type="text" id="visitor-name" placeholder="e.g. John Doe" required
                 style="height: 48px; padding: 0 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
               <span id="name-error"
-                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Full name is required.</span>
+                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Full name is
+                required.</span>
             </div>
 
             <!-- Email Input Field -->
             <div style="display: flex; flex-direction: column; width: 100%;">
               <label for="visitor-email"
-                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Email Address</label>
+                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Email
+                Address</label>
               <input type="email" id="visitor-email" placeholder="e.g. john@example.com" required
                 style="height: 48px; padding: 0 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
               <span id="email-error"
-                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Please enter a valid email address.</span>
+                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Please enter
+                a valid email address.</span>
             </div>
 
             <!-- Continue Button -->
@@ -5315,12 +5315,18 @@
         </div>
 
         <!-- Right half: visual artwork (50%) -->
-        <div style="width: 50%; position: relative; z-index: 1; min-height: 480px; overflow: hidden;" class="popup-right-half">
-          <img src="popup_artwork.png" alt="Artwork" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9) contrast(1.15);">
+        <div style="width: 50%; position: relative; z-index: 1; min-height: 480px; overflow: hidden;"
+          class="popup-right-half">
+          <img src="popup_artwork.png" alt="Artwork"
+            style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9) contrast(1.15);">
           <!-- Top right Close (X) button inside the image -->
           <button id="close-lead-btn" aria-label="Close"
             style="position: absolute; top: 24px; right: 24px; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ffffff; font-size: 16px; font-weight: bold; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; line-height: 1; outline: none;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
 
@@ -5496,21 +5502,25 @@
           transform: rotate(360deg);
         }
       }
+
       @media (max-width: 768px) {
         #lead-popup-card {
           flex-direction: column !important;
           max-width: 440px !important;
         }
+
         .popup-left-half {
           width: 100% !important;
           padding: 36px 28px !important;
         }
+
         .popup-right-half {
           width: 100% !important;
           min-height: 200px !important;
           height: 200px !important;
           order: -1;
         }
+
         #close-lead-btn {
           top: 16px !important;
           right: 16px !important;
