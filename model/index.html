@@ -5208,6 +5208,77 @@
       window.addEventListener('resize', initZoomBubble);
       setTimeout(initZoomBubble, 1500); // fallback position settle
 
+      // Function to dynamically update the zoom UI based on actual camera distance from target
+      function updateZoomUIFromCamera() {
+        const aspect = window.visualViewport ? window.visualViewport.width / window.visualViewport.height : window.innerWidth / window.innerHeight;
+        let distanceMultiplier = 1.0;
+        const closestViewIdx = getClosestViewIndex();
+        
+        if (aspect < 1.0) {
+          distanceMultiplier = closestViewIdx === 0 ? 0.55 : 0.75;
+        } else if (aspect < 1.6) {
+          distanceMultiplier = closestViewIdx === 0 ? 0.65 : 0.85;
+        }
+        
+        const baselineDistance = 4.804 * distanceMultiplier;
+        const actualDistance = camera.position.distanceTo(controls.target);
+        
+        const minD = controls.minDistance;
+        const maxD = controls.maxDistance;
+        
+        // Calculate the clamped target distance for each scale
+        const d15 = Math.max(minD, Math.min(maxD, baselineDistance / 1.5));
+        const d10 = Math.max(minD, Math.min(maxD, baselineDistance / 1.0));
+        const d05 = Math.max(minD, Math.min(maxD, baselineDistance / 0.5));
+        
+        const diff15 = Math.abs(actualDistance - d15);
+        const diff10 = Math.abs(actualDistance - d10);
+        const diff05 = Math.abs(actualDistance - d05);
+        
+        let targetScale = 1.0;
+        let minDiff = diff10;
+        
+        if (diff15 < minDiff) {
+          minDiff = diff15;
+          targetScale = 1.5;
+        }
+        if (diff05 < minDiff) {
+          minDiff = diff05;
+          targetScale = 0.5;
+        }
+        
+        if (targetScale !== cameraZoomScale) {
+          cameraZoomScale = targetScale;
+          
+          const zoomBtns = document.querySelectorAll('.zoom-btn');
+          zoomBtns.forEach(btn => {
+            const btnZoom = parseFloat(btn.getAttribute('data-zoom'));
+            if (btnZoom === cameraZoomScale) {
+              btn.classList.add('active');
+              btn.style.color = '#dfb86c';
+              btn.style.fontWeight = '700';
+              
+              const bubble = document.getElementById('zoom-bubble');
+              if (bubble) {
+                bubble.style.left = `${btn.offsetLeft}px`;
+                bubble.style.width = `${btn.offsetWidth}px`;
+              }
+            } else {
+              btn.classList.remove('active');
+              btn.style.color = '#cfc7de';
+              btn.style.fontWeight = '600';
+            }
+          });
+        }
+      }
+
+      // Listen to OrbitControls zoom/orbit changes and sync UI
+      controls.addEventListener('change', () => {
+        // Skip updating zoom indicators while camera is doing a GSAP transition
+        if (typeof gsap !== 'undefined' && gsap.isTweening(camera.position)) return;
+        updateZoomUIFromCamera();
+      });
+
       animate();
     </script>
 
