@@ -4627,35 +4627,61 @@
 
       // FormSubmit Configuration
       const FORMSUBMIT_EMAIL = 'dipakparmar2466@gmail.com';
-      const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${FORMSUBMIT_EMAIL}`;
+      const FORMSUBMIT_URL = `https://formsubmit.co/${FORMSUBMIT_EMAIL}`;
 
-      // Helper function to send requests to FormSubmit.co
+      // Helper function to send requests to FormSubmit.co using a hidden iframe to bypass CORS on file:// protocol
       function sendToFormSubmit(subject, data) {
-        return fetch(FORMSUBMIT_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            _subject: subject,
-            _captcha: 'false',
-            _template: 'table',
-            ...data
-          })
-        })
-          .then(response => {
-            if (!response.ok) {
-              console.warn('[FormSubmit Alert] Response not ok:', response);
-            }
-            return response.json();
-          })
-          .then(resData => {
-            console.log('[FormSubmit Success]:', resData);
-          })
-          .catch(err => {
-            console.error('[FormSubmit Connection Error]:', err);
-          });
+        // Create hidden iframe if it doesn't exist
+        let iframe = document.getElementById('formsubmit-iframe');
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.id = 'formsubmit-iframe';
+          iframe.name = 'formsubmit-iframe';
+          iframe.style.display = 'none';
+          document.body.appendChild(iframe);
+        }
+
+        // Create hidden form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = FORMSUBMIT_URL;
+        form.target = 'formsubmit-iframe';
+        form.style.display = 'none';
+
+        // Add FormSubmit configurations
+        const configs = {
+          _subject: subject,
+          _captcha: 'false',
+          _template: 'table'
+        };
+
+        for (const [name, val] of Object.entries(configs)) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          input.value = val;
+          form.appendChild(input);
+        }
+
+        // Add submission fields
+        for (const [key, value] of Object.entries(data)) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+
+        // Cleanup
+        setTimeout(() => {
+          form.remove();
+        }, 1000);
+
+        console.log('[FormSubmit Sent via Hidden Iframe]');
+        return Promise.resolve();
       }
 
       // Check session state on load and log guidance for developers
