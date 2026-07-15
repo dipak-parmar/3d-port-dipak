@@ -4605,44 +4605,437 @@
         targetPercent = 100;
       }, 2500);
 
+      // =========================================================================
+      // >>> LEAD CAPTURE POPUP SYSTEM (Apple + Porsche + Awwwards Style) <<<
+      // =========================================================================
+      let exploredWalls = new Set();
+      let wallExploreTimer = null;
+      let currentTrackingWall = -1;
+      let popupTriggered = false;
+      let isPopupOpen = false;
+      const startTime = performance.now();
+
+      // EmailJS configuration variables
+      const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY';
+      const EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID';
+      const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
+
+      // Parse metadata of the visitor
+      function getVisitorMetadata() {
+        const userAgent = navigator.userAgent;
+
+        let os = 'Unknown OS';
+        if (userAgent.indexOf('Win') !== -1) os = 'Windows';
+        else if (userAgent.indexOf('Mac') !== -1) os = 'macOS';
+        else if (userAgent.indexOf('X11') !== -1) os = 'UNIX';
+        else if (userAgent.indexOf('Linux') !== -1) os = 'Linux';
+        else if (/Android/.test(userAgent)) os = 'Android';
+        else if (/iPhone|iPad|iPod/.test(userAgent)) os = 'iOS';
+
+        let browser = 'Unknown Browser';
+        if (userAgent.indexOf('Chrome') !== -1) browser = 'Google Chrome';
+        else if (userAgent.indexOf('Safari') !== -1) browser = 'Apple Safari';
+        else if (userAgent.indexOf('Firefox') !== -1) browser = 'Mozilla Firefox';
+        else if (userAgent.indexOf('MSIE') !== -1 || !!document.documentMode === true) browser = 'Internet Explorer';
+        else if (userAgent.indexOf('Edge') !== -1) browser = 'Microsoft Edge';
+
+        let deviceType = 'Desktop';
+        const width = window.innerWidth;
+        if (/Mobi|Android|iPhone/i.test(userAgent)) {
+          deviceType = 'Mobile';
+        } else if (/Tablet|iPad/i.test(userAgent) || (width >= 768 && width <= 1024)) {
+          deviceType = 'Tablet';
+        }
+
+        const timeSpentSeconds = Math.round((performance.now() - startTime) / 1000);
+        const minutes = Math.floor(timeSpentSeconds / 60);
+        const seconds = timeSpentSeconds % 60;
+        const timeSpentFormatted = `${minutes}m ${seconds}s`;
+
+        return {
+          date_time: new Date().toLocaleString(),
+          browser: browser,
+          os: os,
+          device_type: deviceType,
+          screen_resolution: `${window.screen.width}x${window.screen.height}`,
+          language: navigator.language || navigator.userLanguage,
+          referrer: document.referrer || 'Direct',
+          time_spent: timeSpentFormatted,
+          page_url: window.location.href
+        };
+      }
+
+      // Check wall exploration based on camera angles
+      function checkWallExploration() {
+        if (popupTriggered || sessionStorage.getItem('popup_submitted_or_skipped')) return;
+
+        const dx = camera.position.x - controls.target.x;
+        const dz = camera.position.z - controls.target.z;
+        const currentAngle = Math.atan2(dx, dz);
+
+        let closestIdx = -1;
+        let minDiff = Infinity;
+
+        for (let i = 0; i < viewpoints.length; i++) {
+          const vpAngle = Math.atan2(viewpoints[i].x, viewpoints[i].z);
+          let diff = Math.abs(currentAngle - vpAngle);
+          while (diff > Math.PI) diff = Math.abs(diff - 2 * Math.PI);
+
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+        }
+
+        // If user remains within 0.8 radians (~45 degrees) of this viewpoint
+        if (minDiff < 0.8) {
+          if (closestIdx !== currentTrackingWall) {
+            currentTrackingWall = closestIdx;
+            if (wallExploreTimer) clearTimeout(wallExploreTimer);
+
+            // Timer coordinates validation: if they stay facing this wall for 1.2s, mark it as completed
+            if (!exploredWalls.has(closestIdx)) {
+              wallExploreTimer = setTimeout(() => {
+                exploredWalls.add(closestIdx);
+                console.log(`Wall ${closestIdx} completed. Progress: ${exploredWalls.size}/4`);
+
+                if (exploredWalls.size === 4 && !popupTriggered) {
+                  popupTriggered = true;
+                  if (wallExploreTimer) clearTimeout(wallExploreTimer);
+
+                  // Trigger popup opening after 800ms
+                  setTimeout(openLeadPopup, 800);
+                }
+              }, 1200);
+            }
+          }
+        } else {
+          currentTrackingWall = -1;
+          if (wallExploreTimer) {
+            clearTimeout(wallExploreTimer);
+            wallExploreTimer = null;
+          }
+        }
+      }
+
+      // Generate card floating particles
+      function createCardParticles() {
+        const container = document.getElementById('popup-particles-container');
+        if (!container) return;
+        container.innerHTML = '';
+        for (let i = 0; i < 22; i++) {
+          const p = document.createElement('div');
+          p.className = 'popup-particle';
+          const size = Math.random() * 4 + 2;
+          p.style.width = `${size}px`;
+          p.style.height = `${size}px`;
+          p.style.left = `${Math.random() * 100}%`;
+          p.style.top = `${Math.random() * 100}%`;
+          p.style.opacity = Math.random() * 0.4 + 0.1;
+
+          p.style.setProperty('--dx', `${(Math.random() - 0.5) * 60}px`);
+          p.style.setProperty('--dy', `${(Math.random() - 0.5) * 60}px`);
+          p.style.animation = `drift ${Math.random() * 8 + 8}s ease-in-out infinite alternate`;
+          container.appendChild(p);
+        }
+      }
+
+      // Open Popup
+      function openLeadPopup() {
+        if (sessionStorage.getItem('popup_submitted_or_skipped')) return;
+
+        isPopupOpen = true;
+        controls.enabled = false;
+
+        const overlay = document.getElementById('lead-overlay');
+        overlay.style.display = 'flex';
+
+        createCardParticles();
+
+        gsap.killTweensOf([overlay, '#lead-popup-card']);
+        gsap.set(overlay, { opacity: 0 });
+        gsap.set('#lead-popup-card', { scale: 0.9, opacity: 0 });
+
+        gsap.to(overlay, {
+          opacity: 1,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+
+        gsap.to('#lead-popup-card', {
+          scale: 1,
+          opacity: 1,
+          duration: 0.6,
+          ease: 'back.out(1.4)',
+          delay: 0.05
+        });
+      }
+
+      // Close Popup
+      function closeLeadPopup(method = null) {
+        if (!isPopupOpen) return;
+
+        if (method) {
+          trackAnalytics(method);
+        }
+
+        isPopupOpen = false;
+        sessionStorage.setItem('popup_submitted_or_skipped', 'true');
+
+        const overlay = document.getElementById('lead-overlay');
+
+        gsap.killTweensOf([overlay, '#lead-popup-card']);
+
+        gsap.to('#lead-popup-card', {
+          scale: 0.9,
+          opacity: 0,
+          duration: 0.5,
+          ease: 'power2.in'
+        });
+
+        gsap.to(overlay, {
+          opacity: 0,
+          duration: 0.5,
+          ease: 'power2.in',
+          onComplete: () => {
+            overlay.style.display = 'none';
+            const anyOtherOpen = document.getElementById('pdf-modal').style.display === 'flex' ||
+              document.getElementById('image-modal').style.display === 'flex' ||
+              document.getElementById('skill-modal').style.display === 'flex';
+            if (!anyOtherOpen) {
+              controls.enabled = true;
+            }
+          }
+        });
+      }
+
+      // Toast Notification
+      function showSuccessToast() {
+        const toast = document.getElementById('success-toast');
+        if (!toast) return;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3800);
+      }
+
+      // Form validation and submit
+      function submitLeadForm() {
+        const nameInput = document.getElementById('visitor-name');
+        const emailInput = document.getElementById('visitor-email');
+        const nameErr = document.getElementById('name-error');
+        const emailErr = document.getElementById('email-error');
+        const submitBtn = document.getElementById('continue-lead-btn');
+
+        let isValid = true;
+
+        nameInput.classList.remove('shake-input');
+        emailInput.classList.remove('shake-input');
+        nameErr.style.display = 'none';
+        emailErr.style.display = 'none';
+
+        const nameVal = nameInput.value.trim();
+        const emailVal = emailInput.value.trim();
+
+        if (!nameVal) {
+          isValid = false;
+          nameInput.classList.add('shake-input');
+          nameErr.style.display = 'block';
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailVal || !emailRegex.test(emailVal)) {
+          isValid = false;
+          emailInput.classList.add('shake-input');
+          emailErr.style.display = 'block';
+        }
+
+        if (!isValid) return;
+
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = `<span class="btn-spinner"></span> Sending...`;
+        submitBtn.style.pointerEvents = 'none';
+
+        const meta = getVisitorMetadata();
+        const templateParams = {
+          visitor_name: nameVal,
+          visitor_email: emailVal,
+          date_time: meta.date_time,
+          browser: meta.browser,
+          os: meta.os,
+          device_type: meta.device_type,
+          screen_resolution: meta.screen_resolution,
+          language: meta.language,
+          referrer: meta.referrer,
+          time_spent: meta.time_spent,
+          page_url: meta.page_url
+        };
+
+        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+            .then(() => {
+              proceedToSuccess();
+            })
+            .catch((err) => {
+              console.error('EmailJS submission failed:', err);
+              proceedToSuccess();
+            });
+        } else {
+          console.log('%c[Lead Submission captured]', 'color: #10b981; font-weight: bold;', templateParams);
+          setTimeout(() => {
+            proceedToSuccess();
+          }, 1000);
+        }
+
+        function proceedToSuccess() {
+          submitBtn.innerHTML = originalBtnHTML;
+          submitBtn.style.pointerEvents = 'auto';
+
+          nameInput.value = '';
+          emailInput.value = '';
+
+          isPopupOpen = false;
+          sessionStorage.setItem('popup_submitted_or_skipped', 'true');
+
+          const overlay = document.getElementById('lead-overlay');
+          gsap.killTweensOf([overlay, '#lead-popup-card']);
+
+          gsap.to('#lead-popup-card', {
+            scale: 0.85,
+            opacity: 0,
+            duration: 0.45,
+            ease: 'power2.in'
+          });
+
+          gsap.to(overlay, {
+            opacity: 0,
+            duration: 0.45,
+            ease: 'power2.in',
+            onComplete: () => {
+              overlay.style.display = 'none';
+              controls.enabled = true;
+              showSuccessToast();
+            }
+          });
+        }
+      }
+
+      // Track Analytics Events
+      function trackAnalytics(method) {
+        const meta = getVisitorMetadata();
+        const analyticsData = {
+          event: 'popup_skipped',
+          skip_method: method,
+          ...meta
+        };
+
+        console.log('%c[Analytics Event: popup_skipped]', 'color: #3b82f6; font-weight: bold;', analyticsData);
+
+        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            visitor_name: `Analytics Event: popup_skipped [Method: ${method}]`,
+            visitor_email: 'analytics@portfolio.local',
+            date_time: meta.date_time,
+            browser: meta.browser,
+            os: meta.os,
+            device_type: meta.device_type,
+            screen_resolution: meta.screen_resolution,
+            language: meta.language,
+            referrer: meta.referrer,
+            time_spent: meta.time_spent,
+            page_url: meta.page_url
+          }).catch(err => console.error('Error sending analytics event via EmailJS:', err));
+        }
+      }
+
+      // Bind events to DOM elements
+      document.getElementById('close-lead-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLeadPopup('X');
+      });
+      document.getElementById('skip-lead-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLeadPopup('Skip Button');
+      });
+      document.getElementById('lead-overlay').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (e.target.id === 'lead-overlay') {
+          closeLeadPopup('Outside Click');
+        }
+      });
+      document.getElementById('lead-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitLeadForm();
+      });
+
+      // ESC closes popup
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isPopupOpen) {
+          closeLeadPopup('ESC');
+        }
+      });
+
+      // Stop pointer interaction leaks to ThreeJS background
+      const leadOverlay = document.getElementById('lead-overlay');
+      const stopPointerEvents = (e) => e.stopPropagation();
+      leadOverlay.addEventListener('pointerdown', stopPointerEvents);
+      leadOverlay.addEventListener('pointerup', stopPointerEvents);
+      leadOverlay.addEventListener('pointermove', stopPointerEvents);
+      leadOverlay.addEventListener('mousedown', stopPointerEvents);
+      leadOverlay.addEventListener('mouseup', stopPointerEvents);
+
+      // Dyn-load EmailJS SDK
+      const emailJsScript = document.createElement('script');
+      emailJsScript.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+      emailJsScript.onload = () => {
+        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+          emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        }
+      };
+      document.head.appendChild(emailJsScript);
+
       function animate() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // Automatically oscillate the scene and cssScene instead of camera target to avoid OrbitControls fighting/jitter
         const dy = Math.sin(t * 0.35) * 0.2;
         scene.position.y = dy;
         cssScene.position.y = dy;
 
-        // Keep the 3D model static in front of the resume wall as before
         if (loadedModel) {
-          // Configured in GLTFLoader block: position (5.8, 1.2, 3.5) and rotation (y = Math.PI)
         }
 
-
-
         controls.update();
-        updateVSCodeScreen();
-        updateTerminalScreen();
-        updateWatchScreen();
-        updateThreeJsPortfolioScreen(t);
-        updateGithubDashboardScreen(t);
-        updateLaptopScreen(t);
-        updateCoffeeSteam(t);
 
-        allFloaters.forEach(f => {
-          const floatDy = Math.sin(t * 1.2 + f.phase) * 0.08;
-          if (f.group) {
-            f.group.forEach(m => { m.position.y = f.baseY + floatDy; });
-          }
-          if (f.cssObj) {
-            if (f.customFloater) {
-              f.cssObj.position.y = f.baseY + floatDy;
-            } else {
-              f.cssObj.position.y = (f.baseY + 1.35) + floatDy;
+        if (loaderFinished) {
+          checkWallExploration();
+        }
+
+        if (!isPopupOpen) {
+          updateVSCodeScreen();
+          updateTerminalScreen();
+          updateWatchScreen();
+          updateThreeJsPortfolioScreen(t);
+          updateGithubDashboardScreen(t);
+          updateLaptopScreen(t);
+          updateCoffeeSteam(t);
+
+          allFloaters.forEach(f => {
+            const floatDy = Math.sin(t * 1.2 + f.phase) * 0.08;
+            if (f.group) {
+              f.group.forEach(m => { m.position.y = f.baseY + floatDy; });
             }
-          }
-        });
+            if (f.cssObj) {
+              if (f.customFloater) {
+                f.cssObj.position.y = f.baseY + floatDy;
+              } else {
+                f.cssObj.position.y = (f.baseY + 1.35) + floatDy;
+              }
+            }
+          });
+        }
 
         renderer.render(scene, camera);
         cssRenderer.render(cssScene, camera);
@@ -4831,7 +5224,257 @@
       </div>
     </div>
 
+    <!-- Lead Capture Popup Overlay Modal (Apple + Porsche + Awwwards Style) -->
+    <div id="lead-overlay"
+      style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 7, 12, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 100000000; justify-content: center; align-items: center; opacity: 0; transition: backdrop-filter 0.5s;">
 
+      <!-- Glow Ring Border effect wrapper -->
+      <div id="lead-popup-card"
+        style="position: relative; width: 90%; max-width: 520px; background: rgba(18, 17, 24, 0.75); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08); padding: 48px 40px; box-sizing: border-box; color: #f8fafc; font-family: 'Space Grotesk', 'Montserrat', sans-serif; overflow: hidden; transform: scale(0.9); opacity: 0; transition: border-color 0.5s ease-in-out;">
+
+        <!-- Drifting Particle Effect Canvas Container -->
+        <div id="popup-particles-container"
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 0;">
+        </div>
+
+        <!-- Neon Top Glow Strip -->
+        <div
+          style="position: absolute; top: 0; left: 10%; width: 80%; height: 2px; background: linear-gradient(90deg, transparent, #8b5cf6, #3b82f6, transparent); opacity: 0.7;">
+        </div>
+
+        <!-- Premium Close (X) Button -->
+        <button id="close-lead-btn" aria-label="Close"
+          style="position: absolute; top: 24px; right: 24px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; font-size: 16px; font-weight: bold; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; line-height: 1; outline: none;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Content -->
+        <div style="position: relative; z-index: 1; display: flex; flex-direction: column; width: 100%;">
+          <!-- Header -->
+          <h2
+            style="margin: 0 0 12px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.25; background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Let's Build Something Amazing</h2>
+          <p
+            style="margin: 0 0 32px 0; font-size: 15px; line-height: 1.5; color: #94a3b8; font-weight: 300; letter-spacing: 0.2px;">
+            Enjoyed exploring my 3D portfolio? Leave your details and I'll get back to you.</p>
+
+          <!-- Form -->
+          <form id="lead-form" onsubmit="event.preventDefault();"
+            style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+            <!-- Name Input Field -->
+            <div style="display: flex; flex-direction: column; width: 100%;">
+              <label for="visitor-name"
+                style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 8px;">Full
+                Name</label>
+              <input type="text" id="visitor-name" placeholder="e.g. John Doe" required
+                style="height: 52px; padding: 0 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 15px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
+              <span id="name-error"
+                style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 400;">Full name is
+                required.</span>
+            </div>
+
+            <!-- Email Input Field -->
+            <div style="display: flex; flex-direction: column; width: 100%;">
+              <label for="visitor-email"
+                style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 8px;">Email
+                Address</label>
+              <input type="email" id="visitor-email" placeholder="e.g. john@example.com" required
+                style="height: 52px; padding: 0 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 15px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
+              <span id="email-error"
+                style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 400;">Please enter
+                a valid email address.</span>
+            </div>
+
+            <!-- Continue Button -->
+            <button type="submit" id="continue-lead-btn"
+              style="margin-top: 12px; height: 52px; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: #ffffff; font-family: inherit; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+              Continue &rarr;
+            </button>
+          </form>
+
+          <!-- Skip Button -->
+          <button id="skip-lead-btn"
+            style="background: none; border: none; color: #94a3b8; font-family: inherit; font-size: 14px; font-weight: 500; margin-top: 24px; cursor: pointer; padding: 4px; width: fit-content; align-self: center; transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none;">
+            Skip for now
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium Success Toast Notification -->
+    <div id="success-toast">
+      <div class="toast-icon">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div class="toast-text">Thank &nbsp;you!&nbsp; I'll&nbsp; contact&nbsp; you&nbsp; soon.</div>
+    </div>
+
+    <style>
+      /* Lead capture modal animations and styles */
+      #lead-popup-card {
+        animation: borderGlow 6s infinite alternate ease-in-out;
+      }
+
+      @keyframes borderGlow {
+
+        0%,
+        100% {
+          border-color: rgba(139, 92, 246, 0.35);
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 30px rgba(139, 92, 246, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        }
+
+        50% {
+          border-color: rgba(59, 130, 246, 0.35);
+          box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        }
+      }
+
+      @keyframes drift {
+        0% {
+          transform: translate(0, 0) scale(1);
+        }
+
+        100% {
+          transform: translate(var(--dx), var(--dy)) scale(1.4);
+        }
+      }
+
+      .popup-particle {
+        position: absolute;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.45) 0%, rgba(59, 130, 246, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      /* Shaking error indicator */
+      .shake-input {
+        animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+      }
+
+      @keyframes shake {
+
+        10%,
+        90% {
+          transform: translate3d(-1px, 0, 0);
+        }
+
+        20%,
+        80% {
+          transform: translate3d(2px, 0, 0);
+        }
+
+        30%,
+        50%,
+        70% {
+          transform: translate3d(-4px, 0, 0);
+        }
+
+        40%,
+        60% {
+          transform: translate3d(4px, 0, 0);
+        }
+      }
+
+      #visitor-name:focus,
+      #visitor-email:focus {
+        border-color: #8b5cf6 !important;
+        box-shadow: 0 0 16px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.07) !important;
+      }
+
+      #visitor-name:hover,
+      #visitor-email:hover {
+        border-color: rgba(139, 92, 246, 0.5) !important;
+      }
+
+      #close-lead-btn:hover {
+        color: #ffffff !important;
+        border-color: rgba(139, 92, 246, 0.6) !important;
+        background: rgba(139, 92, 246, 0.15) !important;
+        transform: rotate(90deg);
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+      }
+
+      #skip-lead-btn:hover {
+        color: #ffffff !important;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+      }
+
+      /* Success Toast styling */
+      #success-toast {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translate(-50%, -100px);
+        background: rgba(16, 24, 21, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-radius: 16px;
+        padding: 16px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 2000000000;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.25);
+        pointer-events: none;
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      #success-toast.show {
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+
+      .toast-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .toast-text {
+        color: #f8fafc;
+        font-family: 'Space Grotesk', Montserrat, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+      }
+
+      .btn-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #ffffff;
+        animation: btn-spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes btn-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
 
     <!-- Camera Zoom Presets (0.5x, 1x, 1.5x) bottom center (Absolute placed in container) -->
     <div id="zoom-controls"
