@@ -1136,7 +1136,7 @@
       container.appendChild(cssRenderer.domElement);
 
       // Global arrays & loader declarations
-      var leftRedLight, rightBlueLight;
+      var leftRedLight, rightBlueLight, charRedLight, charBlueLight;
       let modelNamePlane = null;
       var wallNeonGroup;
       var toggleButton;
@@ -1242,6 +1242,15 @@
       // Moody ambient lighting for retro cyber feel
       scene.add(new THREE.AmbientLight(0x120d1e, 1.4));
       scene.add(new THREE.HemisphereLight(0x2a1b40, 0x050408, 0.8));
+
+      // Character local backlight / rim light accents (active when lights are OFF, dimmed when lights are ON)
+      charRedLight = new THREE.PointLight(0xff0844, 30.0, 8, 1.5);
+      charRedLight.position.set(6.8, 4.2, 5.2);
+      scene.add(charRedLight);
+
+      charBlueLight = new THREE.PointLight(0x0077ff, 35.0, 8, 1.5);
+      charBlueLight.position.set(6.8, 4.2, 1.8);
+      scene.add(charBlueLight);
 
       // Left side gaming red/cherry accent lighting
       leftRedLight = new THREE.PointLight(0xff004c, 24.0, 24, 1.5);
@@ -1463,6 +1472,10 @@
           // Set red/blue lights to very subtle intensities (minor-minor) when switch is ON
           if (leftRedLight) leftRedLight.intensity = 8.0;
           if (rightBlueLight) rightBlueLight.intensity = 10.0;
+
+          // Turn off target character spotlight/accent lights in the bright room
+          if (charRedLight) charRedLight.intensity = 0.0;
+          if (charBlueLight) charBlueLight.intensity = 0.0;
         } else {
           wallMaterial.color.setHex(0x1f1f24); // default deep charcoal/dark gray
           borderLightMaterial.color.setHex(0x8b5cf6); // Keep ON (purple) even in night mode!
@@ -1470,6 +1483,10 @@
           // Revert to original atmospheric intensities when switch is OFF
           if (leftRedLight) leftRedLight.intensity = 24.0;
           if (rightBlueLight) rightBlueLight.intensity = 35.0;
+
+          // Turn on target character spotlight/accent lights when room lights are OFF
+          if (charRedLight) charRedLight.intensity = 30.0;
+          if (charBlueLight) charBlueLight.intensity = 35.0;
         }
       }
 
