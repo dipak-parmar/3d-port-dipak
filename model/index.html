@@ -1087,9 +1087,9 @@
       };
 
       const PROJECT_PHOTOS = [
-        './product1.png',
+        './product.png',
         './product2.png',
-        './product.png'
+        './product1.png'
       ];
 
       const ABOUT_IMAGES = [
@@ -1097,7 +1097,7 @@
         './image_copy_1.jpg',
         './image_copy_2.jpg'
       ];// <-- replace with real project screenshots
-      const PROJECT_LABELS = ['SNEAKER ROOM', 'PROJECT 2', 'PROJECT 3'];
+      const PROJECT_LABELS = ['CAN', 'WATCH', 'CLOTHES'];
 
       const SKILLS = ['HTML', 'CSS', 'SCSS', 'BOOTSTRAP', 'JS', 'THREE.JS', 'WORDPRESS']; // <-- edit your real skills
       /* ========================================================= */
@@ -3531,10 +3531,10 @@
               baseScale: 1.0,
               onClick: () => {
                 const links = [
-                  'https://shopcloth3d.vercel.app/',
+                  'https://3d-can-five.vercel.app/',
 
                   'https://watch-3d-theta.vercel.app/',
-                  'https://3d-can-five.vercel.app/'
+                  'https://shopcloth3d.vercel.app/'
 
                 ];
                 const projectLink = links[currentIdx];
@@ -3826,22 +3826,22 @@
           const lower = name.toLowerCase();
 
           let percentage = 85;
-          let color = '#d4af37'; // Default Luxury Gold
+          let color = '#dfb86c'; // Consistent Luxury Champagne Gold color for all skill cards
 
           if (lower.includes('html')) {
-            percentage = 95; color = '#dfb86c'; // Antique Champagne Gold
+            percentage = 95;
           } else if (lower.includes('css')) {
-            percentage = 90; color = '#e5e4e2'; // Satin Platinum / Silver
+            percentage = 90;
           } else if (lower.includes('three.js') || lower.includes('threejs')) {
-            percentage = 75; color = '#8b5cf6'; // Rich Royal Purple
+            percentage = 75;
           } else if (lower.includes('javascript') || lower.includes('js')) {
-            percentage = 60; color = '#dfab3c'; // Imperial Gold
+            percentage = 60;
           } else if (lower.includes('scss') || lower.includes('sass')) {
-            percentage = 80; color = '#b76e79'; // Elegant Rose Gold
+            percentage = 80;
           } else if (lower.includes('bootstrap')) {
-            percentage = 85; color = '#b49bcf'; // Soft Amethyst Gold
+            percentage = 85;
           } else if (lower.includes('wordpress')) {
-            percentage = 50; color = '#8aa1b5'; // Slate Sapphire Blue Gold
+            percentage = 50;
           }
 
           // Parent group for this specific skill card
@@ -5213,31 +5213,31 @@
         const aspect = window.visualViewport ? window.visualViewport.width / window.visualViewport.height : window.innerWidth / window.innerHeight;
         let distanceMultiplier = 1.0;
         const closestViewIdx = getClosestViewIndex();
-        
+
         if (aspect < 1.0) {
           distanceMultiplier = closestViewIdx === 0 ? 0.55 : 0.75;
         } else if (aspect < 1.6) {
           distanceMultiplier = closestViewIdx === 0 ? 0.65 : 0.85;
         }
-        
+
         const baselineDistance = 4.804 * distanceMultiplier;
         const actualDistance = camera.position.distanceTo(controls.target);
-        
+
         const minD = controls.minDistance;
         const maxD = controls.maxDistance;
-        
+
         // Calculate the clamped target distance for each scale
         const d15 = Math.max(minD, Math.min(maxD, baselineDistance / 1.5));
         const d10 = Math.max(minD, Math.min(maxD, baselineDistance / 1.0));
         const d05 = Math.max(minD, Math.min(maxD, baselineDistance / 0.5));
-        
+
         const diff15 = Math.abs(actualDistance - d15);
         const diff10 = Math.abs(actualDistance - d10);
         const diff05 = Math.abs(actualDistance - d05);
-        
+
         let targetScale = 1.0;
         let minDiff = diff10;
-        
+
         if (diff15 < minDiff) {
           minDiff = diff15;
           targetScale = 1.5;
@@ -5246,10 +5246,10 @@
           minDiff = diff05;
           targetScale = 0.5;
         }
-        
+
         if (targetScale !== cameraZoomScale) {
           cameraZoomScale = targetScale;
-          
+
           const zoomBtns = document.querySelectorAll('.zoom-btn');
           zoomBtns.forEach(btn => {
             const btnZoom = parseFloat(btn.getAttribute('data-zoom'));
@@ -5257,7 +5257,7 @@
               btn.classList.add('active');
               btn.style.color = '#dfb86c';
               btn.style.fontWeight = '700';
-              
+
               const bubble = document.getElementById('zoom-bubble');
               if (bubble) {
                 bubble.style.left = `${btn.offsetLeft}px`;
