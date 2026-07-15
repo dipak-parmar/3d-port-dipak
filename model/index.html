@@ -4608,6 +4608,8 @@
       // =========================================================================
       // >>> LEAD CAPTURE POPUP SYSTEM (Apple + Porsche + Awwwards Style) <<<
       // =========================================================================
+      // >>> LEAD CAPTURE POPUP SYSTEM (Apple + Porsche + Awwwards Style) <<<
+      // =========================================================================
       let exploredWalls = new Set();
       let wallExploreTimer = null;
       let currentTrackingWall = -1;
@@ -4616,9 +4618,16 @@
       const startTime = performance.now();
 
       // EmailJS configuration variables
-      const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY';
-      const EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID';
-      const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
+      const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; 
+      const EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID'; 
+      const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID'; 
+
+      // Check session state on load and log guidance for developers
+      if (sessionStorage.getItem('popup_submitted_or_skipped')) {
+        console.log("%c[Lead Capture System]: Popup is disabled/hidden for this session because it was already submitted or skipped. Run \"resetLeadCaptureState()\" in the console to reset and test again.", "color: #ef4444; font-weight: bold;");
+      } else {
+        console.log("%c[Lead Capture System]: Active. Explore all 4 walls or click navigation buttons to trigger.", "color: #8b5cf6; font-weight: bold;");
+      }
 
       // Parse metadata of the visitor
       function getVisitorMetadata() {
@@ -4693,7 +4702,7 @@
             currentTrackingWall = closestIdx;
             if (wallExploreTimer) clearTimeout(wallExploreTimer);
 
-            // Timer coordinates validation: if they stay facing this wall for 1.2s, mark it as completed
+            // Timer coordinates validation: if they stay facing this wall for 800ms, mark it as completed
             if (!exploredWalls.has(closestIdx)) {
               wallExploreTimer = setTimeout(() => {
                 exploredWalls.add(closestIdx);
@@ -4702,11 +4711,11 @@
                 if (exploredWalls.size === 4 && !popupTriggered) {
                   popupTriggered = true;
                   if (wallExploreTimer) clearTimeout(wallExploreTimer);
-
+                  
                   // Trigger popup opening after 800ms
                   setTimeout(openLeadPopup, 800);
                 }
-              }, 1200);
+              }, 800);
             }
           }
         } else {
@@ -4996,6 +5005,17 @@
       };
       document.head.appendChild(emailJsScript);
 
+      // Expose helpers globally to allow direct debugging
+      window.openLeadPopup = openLeadPopup;
+      window.closeLeadPopup = closeLeadPopup;
+      window.resetLeadCaptureState = () => {
+        sessionStorage.removeItem('popup_submitted_or_skipped');
+        exploredWalls.clear();
+        popupTriggered = false;
+        isPopupOpen = false;
+        console.log("%c[Lead Capture System]: State has been reset. Explore all 4 walls to trigger it again!", "color: #10b981; font-weight: bold;");
+      };
+
       function animate() {
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
@@ -5080,6 +5100,17 @@
       function goToViewpoint(index) {
         currentViewIndex = (index + viewpoints.length) % viewpoints.length;
         const vp = viewpoints[currentViewIndex];
+
+        // Track wall exploration for Lead Popup (Instant register when clicking Navigation buttons)
+        if (typeof exploredWalls !== 'undefined' && !popupTriggered && !sessionStorage.getItem('popup_submitted_or_skipped')) {
+          exploredWalls.add(currentViewIndex);
+          console.log(`Wall ${currentViewIndex} completed via navigation. Progress: ${exploredWalls.size}/4`);
+          if (exploredWalls.size === 4) {
+            popupTriggered = true;
+            if (wallExploreTimer) clearTimeout(wallExploreTimer);
+            setTimeout(openLeadPopup, 800);
+          }
+        }
 
         const aspect = window.innerWidth / window.innerHeight;
         let distanceMultiplier = 1.0;
