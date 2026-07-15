@@ -3473,8 +3473,8 @@
       allFloaters.push({ group: [modelNamePlane], baseY: 7.3, phase: Math.random() * Math.PI * 2 });
 
       const paraTex = makeParagraphTexture(ABOUT_PARAGRAPH, { width: 1200, height: 560 });
-      const paraPlane = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 2.7), new THREE.MeshBasicMaterial({ map: paraTex, transparent: true, depthWrite: true }));
-      paraPlane.position.set(-1.5, 3.3, -7.5); // Position adjusted from 2.8 to 3.3
+      const paraPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.14), new THREE.MeshBasicMaterial({ map: paraTex, transparent: true, depthWrite: true }));
+      paraPlane.position.set(-1.5, 3.55, -7.5); // Position adjusted to center smaller text nicely under header
       scene.add(paraPlane);
       addAboutImages();
 
@@ -4016,7 +4016,7 @@
       switchGroup.add(labelMesh);
 
       // Position the switch group on the Skills wall (Wall 2) top right corner, fully visible on mobile portrait
-      switchGroup.position.set(5.2, 6.0, 7.7);
+      switchGroup.position.set(8.0, 6.0, 7.7);
       switchGroup.rotation.y = Math.PI; // Face inwards (parallel to skills cards)
       scene.add(switchGroup);
 
