@@ -4545,6 +4545,13 @@
             gsap.timeline()
               .set("#zoom-controls", { display: "flex" })
               .to("#zoom-controls", { opacity: 1, duration: 0.6, ease: "power2.out" });
+
+            // Trigger lead popup 2 seconds after website is revealed
+            setTimeout(() => {
+              if (!sessionStorage.getItem('popup_submitted_or_skipped')) {
+                openLeadPopup();
+              }
+            }, 2000);
           }
         });
       }
@@ -5029,10 +5036,6 @@
 
         controls.update();
 
-        if (loaderFinished) {
-          checkWallExploration();
-        }
-
         if (!isPopupOpen) {
           updateVSCodeScreen();
           updateTerminalScreen();
@@ -5101,16 +5104,7 @@
         currentViewIndex = (index + viewpoints.length) % viewpoints.length;
         const vp = viewpoints[currentViewIndex];
 
-        // Track wall exploration for Lead Popup (Instant register when clicking Navigation buttons)
-        if (typeof exploredWalls !== 'undefined' && !popupTriggered && !sessionStorage.getItem('popup_submitted_or_skipped')) {
-          exploredWalls.add(currentViewIndex);
-          console.log(`Wall ${currentViewIndex} completed via navigation. Progress: ${exploredWalls.size}/4`);
-          if (exploredWalls.size === 4) {
-            popupTriggered = true;
-            if (wallExploreTimer) clearTimeout(wallExploreTimer);
-            setTimeout(openLeadPopup, 800);
-          }
-        }
+
 
         const aspect = window.innerWidth / window.innerHeight;
         let distanceMultiplier = 1.0;
@@ -5259,9 +5253,9 @@
     <div id="lead-overlay"
       style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 7, 12, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 100000000; justify-content: center; align-items: center; opacity: 0; transition: backdrop-filter 0.5s;">
 
-      <!-- Glow Ring Border effect wrapper -->
+      <!-- Glow Ring Border split wrapper -->
       <div id="lead-popup-card"
-        style="position: relative; width: 90%; max-width: 520px; background: rgba(18, 17, 24, 0.75); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.08); padding: 48px 40px; box-sizing: border-box; color: #f8fafc; font-family: 'Space Grotesk', 'Montserrat', sans-serif; overflow: hidden; transform: scale(0.9); opacity: 0; transition: border-color 0.5s ease-in-out;">
+        style="position: relative; width: 92%; max-width: 860px; display: flex; background: rgba(18, 17, 24, 0.85); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.08); color: #f8fafc; font-family: 'Space Grotesk', 'Montserrat', sans-serif; overflow: hidden; transform: scale(0.9); opacity: 0; transition: border-color 0.5s ease-in-out;">
 
         <!-- Drifting Particle Effect Canvas Container -->
         <div id="popup-particles-container"
@@ -5270,69 +5264,66 @@
 
         <!-- Neon Top Glow Strip -->
         <div
-          style="position: absolute; top: 0; left: 10%; width: 80%; height: 2px; background: linear-gradient(90deg, transparent, #8b5cf6, #3b82f6, transparent); opacity: 0.7;">
+          style="position: absolute; top: 0; left: 5%; width: 90%; height: 2px; background: linear-gradient(90deg, transparent, #8b5cf6, #3b82f6, transparent); opacity: 0.7; z-index: 5;">
         </div>
 
-        <!-- Premium Close (X) Button -->
-        <button id="close-lead-btn" aria-label="Close"
-          style="position: absolute; top: 24px; right: 24px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; font-size: 16px; font-weight: bold; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; line-height: 1; outline: none;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-
-        <!-- Content -->
-        <div style="position: relative; z-index: 1; display: flex; flex-direction: column; width: 100%;">
+        <!-- Left half: inputs & details (50%) -->
+        <div style="width: 50%; padding: 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;" class="popup-left-half">
           <!-- Header -->
           <h2
-            style="margin: 0 0 12px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.25; background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            style="margin: 0 0 12px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.25; background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
             Let's Build Something Amazing</h2>
           <p
-            style="margin: 0 0 32px 0; font-size: 15px; line-height: 1.5; color: #94a3b8; font-weight: 300; letter-spacing: 0.2px;">
+            style="margin: 0 0 28px 0; font-size: 14px; line-height: 1.5; color: #94a3b8; font-weight: 300; letter-spacing: 0.2px;">
             Enjoyed exploring my 3D portfolio? Leave your details and I'll get back to you.</p>
 
           <!-- Form -->
           <form id="lead-form" onsubmit="event.preventDefault();"
-            style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+            style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
             <!-- Name Input Field -->
             <div style="display: flex; flex-direction: column; width: 100%;">
               <label for="visitor-name"
-                style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 8px;">Full
-                Name</label>
+                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Full Name</label>
               <input type="text" id="visitor-name" placeholder="e.g. John Doe" required
-                style="height: 52px; padding: 0 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 15px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
+                style="height: 48px; padding: 0 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
               <span id="name-error"
-                style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 400;">Full name is
-                required.</span>
+                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Full name is required.</span>
             </div>
 
             <!-- Email Input Field -->
             <div style="display: flex; flex-direction: column; width: 100%;">
               <label for="visitor-email"
-                style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 8px;">Email
-                Address</label>
+                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #cfc7de; margin-bottom: 6px;">Email Address</label>
               <input type="email" id="visitor-email" placeholder="e.g. john@example.com" required
-                style="height: 52px; padding: 0 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 15px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
+                style="height: 48px; padding: 0 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-family: inherit; font-size: 14px; outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; box-sizing: border-box;">
               <span id="email-error"
-                style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 400;">Please enter
-                a valid email address.</span>
+                style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 400;">Please enter a valid email address.</span>
             </div>
 
             <!-- Continue Button -->
             <button type="submit" id="continue-lead-btn"
-              style="margin-top: 12px; height: 52px; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: #ffffff; font-family: inherit; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+              style="margin-top: 8px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: #ffffff; font-family: inherit; font-size: 15px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
               Continue &rarr;
             </button>
           </form>
 
           <!-- Skip Button -->
           <button id="skip-lead-btn"
-            style="background: none; border: none; color: #94a3b8; font-family: inherit; font-size: 14px; font-weight: 500; margin-top: 24px; cursor: pointer; padding: 4px; width: fit-content; align-self: center; transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none;">
+            style="background: none; border: none; color: #94a3b8; font-family: inherit; font-size: 13px; font-weight: 500; margin-top: 20px; cursor: pointer; padding: 4px; width: fit-content; align-self: center; transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none;">
             Skip for now
           </button>
         </div>
+
+        <!-- Right half: visual artwork (50%) -->
+        <div style="width: 50%; position: relative; z-index: 1; min-height: 480px; overflow: hidden;" class="popup-right-half">
+          <img src="popup_artwork.png" alt="Artwork" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9) contrast(1.15);">
+          <!-- Top right Close (X) button inside the image -->
+          <button id="close-lead-btn" aria-label="Close"
+            style="position: absolute; top: 24px; right: 24px; background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ffffff; font-size: 16px; font-weight: bold; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; line-height: 1; outline: none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -5503,6 +5494,26 @@
       @keyframes btn-spin {
         to {
           transform: rotate(360deg);
+        }
+      }
+      @media (max-width: 768px) {
+        #lead-popup-card {
+          flex-direction: column !important;
+          max-width: 440px !important;
+        }
+        .popup-left-half {
+          width: 100% !important;
+          padding: 36px 28px !important;
+        }
+        .popup-right-half {
+          width: 100% !important;
+          min-height: 200px !important;
+          height: 200px !important;
+          order: -1;
+        }
+        #close-lead-btn {
+          top: 16px !important;
+          right: 16px !important;
         }
       }
     </style>
