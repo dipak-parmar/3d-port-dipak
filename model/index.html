@@ -1572,7 +1572,7 @@
         ctx.fillText(line, x, curY);
       }
 
-      function makeParagraphTexture(text, { width = 1800, height = 840, font = 'bold 62px "Space Grotesk", "Montserrat", Arial, sans-serif', color = '#ffffff', lineHeight = 88 } = {}) {
+      function makeParagraphTexture(text, { width = 1800, height = 840, font = 'bold 62px "Space Grotesk", "Montserrat", Arial, sans-serif', color = '#ffffff', lineHeight = 88, highlightFont = 'bold 64px "Space Grotesk", "Montserrat", Arial, sans-serif' } = {}) {
         const c = document.createElement('canvas');
         c.width = width; c.height = height;
         const ctx = c.getContext('2d');
@@ -1589,14 +1589,14 @@
           const isHighlight = highlights.includes(cleanWord);
 
           ctx.fillStyle = isHighlight ? '#dfb86c' : color; // Warm Gold highlight for luxury contrast
-          ctx.font = isHighlight ? 'bold 64px "Space Grotesk", "Montserrat", Arial, sans-serif' : font;
+          ctx.font = isHighlight ? highlightFont : font;
 
           const wordWidth = ctx.measureText(word).width;
 
           if (curX + wordWidth > width - 30) {
             curX = 15;
             curY += lineHeight;
-            ctx.font = isHighlight ? 'bold 64px "Space Grotesk", "Montserrat", Arial, sans-serif' : font; // reset for correct measuring if wrapped
+            ctx.font = isHighlight ? highlightFont : font; // reset for correct measuring if wrapped
           }
 
           ctx.fillText(word, curX, curY);
@@ -3472,7 +3472,13 @@
       scene.add(modelNamePlane);
       allFloaters.push({ group: [modelNamePlane], baseY: 7.3, phase: Math.random() * Math.PI * 2 });
 
-      const paraTex = makeParagraphTexture(ABOUT_PARAGRAPH, { width: 1200, height: 560 });
+      const paraTex = makeParagraphTexture(ABOUT_PARAGRAPH, {
+        width: 1200,
+        height: 560,
+        font: 'bold 44px "Space Grotesk", "Montserrat", Arial, sans-serif',
+        highlightFont: 'bold 45px "Space Grotesk", "Montserrat", Arial, sans-serif',
+        lineHeight: 60
+      });
       const paraPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.14), new THREE.MeshBasicMaterial({ map: paraTex, transparent: true, depthWrite: true }));
       paraPlane.position.set(-1.5, 3.55, -7.5); // Position adjusted to center smaller text nicely under header
       scene.add(paraPlane);
