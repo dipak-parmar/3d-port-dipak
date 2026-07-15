@@ -2319,38 +2319,114 @@
         return watchTexture;
       }
 
+      function drawBellIcon(ctx, x, y, size) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.beginPath();
+        // Dome cap
+        ctx.arc(x, y - size / 4, size / 3, Math.PI, 0, false);
+        // Body base flares
+        ctx.quadraticCurveTo(x + size / 3, y + size / 4, x + size / 2, y + size / 4);
+        ctx.lineTo(x - size / 2, y + size / 4);
+        ctx.quadraticCurveTo(x - size / 3, y + size / 4, x - size / 3, y - size / 4);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Bell clapper
+        ctx.beginPath();
+        ctx.arc(x, y + size / 4 + 2, size / 8, 0, Math.PI, false);
+        ctx.fill();
+      }
+
       let lastSecond = -1;
       function updateWatchScreen() {
         if (!watchCtx) return;
         const now = new Date();
         const currentSec = now.getSeconds();
-        if (currentSec === lastSecond) return; // Only re-draw/re-upload watch canvas to GPU once per second (1 FPS instead of 60-120 FPS!)
+        if (currentSec === lastSecond) return;
         lastSecond = currentSec;
 
+        // Get current time formatted in IST timezone (India)
+        let hrs = '12';
+        let mins = '00';
+        let ampm = 'AM';
+        try {
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Kolkata',
+            hour: 'numeric',
+            minute: '2-digit',
+            hourCycle: 'h12'
+          });
+          const parts = formatter.formatToParts(now);
+          parts.forEach(part => {
+            if (part.type === 'hour') hrs = part.value.padStart(2, '0');
+            if (part.type === 'minute') mins = part.value.padStart(2, '0');
+            if (part.type === 'dayPeriod') ampm = part.value.toUpperCase();
+          });
+        } catch (e) {
+          // fallback if timezone not supported
+          const localHrs = now.getHours();
+          hrs = String(localHrs % 12 || 12).padStart(2, '0');
+          mins = String(now.getMinutes()).padStart(2, '0');
+          ampm = localHrs >= 12 ? 'PM' : 'AM';
+        }
+
         const ctx = watchCtx;
-        // Background
-        ctx.fillStyle = '#0f0f14';
+        // Dark metallic screen background
+        ctx.fillStyle = '#060608';
         ctx.fillRect(0, 0, 256, 128);
 
-        // Border glow
-        ctx.strokeStyle = '#0011ff';
-        ctx.lineWidth = 6;
-        ctx.strokeRect(3, 3, 250, 122);
+        // Quiet modern border outline
+        ctx.strokeStyle = '#27272a';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, 252, 124);
 
-        // Time
-        const hrs = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
-        const secsStr = String(currentSec).padStart(2, '0');
-        const timeStr = `${hrs}:${mins}:${secsStr}`;
+        // AM/PM Indicator
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = 'bold 16px "Inter", "Space Grotesk", "Avenir Next", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(ampm, 20, 20);
 
-        ctx.fillStyle = '#0011ff';
-        ctx.font = 'bold 36px monospace';
-        ctx.textAlign = 'center';
+        // Procedural Bell Alarm icon
+        drawBellIcon(ctx, 32, 68, 16);
+
+        // Render main 7-segment-style white LEDs
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = '#0011ff';
-        ctx.shadowBlur = 12;
-        ctx.fillText(timeStr, 128, 64);
+        ctx.font = '800 62px "Inter", "Space Grotesk", "Avenir Next", "Helvetica Neue", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 10;
+
+        // Draw hours (right-aligned)
+        ctx.textAlign = 'right';
+        ctx.fillText(hrs, 120, 68);
+
+        // Blink colon separator
+        ctx.textAlign = 'center';
+        const showColon = currentSec % 2 === 0;
+        if (showColon) {
+          ctx.fillText(':', 136, 62);
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+          ctx.shadowBlur = 0;
+          ctx.fillText(':', 136, 62);
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 10;
+        }
+
+        // Draw minutes (left-aligned)
+        ctx.textAlign = 'left';
+        ctx.fillText(mins, 152, 68);
+
+        // Turn off shadows
         ctx.shadowBlur = 0;
+
+        // Label denoting Live IST Zone
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.font = 'bold 10px "Inter", "Space Grotesk", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('LIVE (IST)', 236, 112);
 
         watchTexture.needsUpdate = true;
       }
