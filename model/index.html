@@ -4548,7 +4548,8 @@
 
             // Trigger lead popup 2 seconds after website is revealed
             setTimeout(() => {
-              if (!sessionStorage.getItem('popup_submitted_or_skipped')) {
+              // TEMPORARY: Bypassed sessionStorage check for testing so it always appears on reload.
+              if (!sessionStorage.getItem('popup_submitted_or_skipped') || true) {
                 openLeadPopup();
               }
             }, 2000);
@@ -4786,7 +4787,8 @@
 
       // Open Popup
       function openLeadPopup() {
-        if (sessionStorage.getItem('popup_submitted_or_skipped')) return;
+        // TEMPORARY: Bypassed sessionStorage check for testing.
+        if (sessionStorage.getItem('popup_submitted_or_skipped') && false) return;
 
         isPopupOpen = true;
         controls.enabled = false;
